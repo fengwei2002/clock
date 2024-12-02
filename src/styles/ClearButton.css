@@ -1,0 +1,128 @@
+.clear-all-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    opacity: 0.5;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-all-btn:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.confirm-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    min-width: 300px;
+    opacity: 0;
+    animation: dialogFadeIn 0.3s ease forwards;
+}
+
+.confirm-dialog h3 {
+    margin: 0 0 15px;
+    color: #2c3e50;
+    font-size: 20px;
+}
+
+.confirm-dialog p {
+    margin: 0;
+    color: #34495e;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.dialog-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 25px;
+}
+
+.dialog-buttons button {
+    padding: 10px 25px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.confirm-btn {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.cancel-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: #2c3e50;
+}
+
+.dialog-buttons button:hover {
+    transform: translateY(-2px);
+}
+
+.confirm-btn:hover {
+    background: rgba(231, 76, 60, 0.3);
+}
+
+.cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes dialogFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+    opacity: 0;
+    animation: overlayFadeIn 0.3s ease forwards;
+}
+
+@keyframes overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .confirm-dialog {
+        width: 90%;
+        max-width: 400px;
+        padding: 20px;
+    }
+} 

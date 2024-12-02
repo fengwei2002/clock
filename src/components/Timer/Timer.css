@@ -1,0 +1,140 @@
+.timer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+}
+
+/* 模式切换按钮样式 */
+.mode-switch {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mode-btn {
+  padding: 8px 16px;
+  border: 1px solid #d9d9d9;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-btn.active {
+  background-color: #1890ff;
+  color: white;
+  border-color: #1890ff;
+}
+
+/* 时间显示区域样式 */
+.timer-display-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin: 20px 0;
+}
+
+.timer-display {
+  font-size: 64px;
+  font-weight: bold;
+  font-family: monospace;
+  color: #333;
+  padding: 20px 40px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  min-width: 240px;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.timer-display.hover {
+  transform: scale(1.05);
+}
+
+/* 时间调整按钮样式 */
+.time-adjust {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.time-adjust button {
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.time-adjust button:hover:not(:disabled) {
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.time-adjust button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* 主控制按钮样式 */
+.main-controls {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.control-btn {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.start {
+  background-color: #52c41a;
+  color: white;
+}
+
+.pause {
+  background-color: #faad14;
+  color: white;
+}
+
+.reset {
+  background-color: #ff4d4f;
+  color: white;
+}
+
+.control-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .timer-display-section {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .time-adjust {
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    min-width: unset;
+  }
+
+  .time-adjust button {
+    width: auto;
+  }
+} 

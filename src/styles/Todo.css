@@ -1,0 +1,129 @@
+/* 容器基础样式 */
+.todo-container {
+   position: relative;
+   flex: 1;
+   min-width: 600px;
+   height: 100vh;
+   padding: var(--spacing-xl);
+   display: flex;
+   flex-direction: column;
+   gap: var(--spacing-xl);
+   background: rgba(255, 255, 255, 0.15);
+   backdrop-filter: blur(20px);
+}
+
+/* 头部样式 */
+.todo-header {
+   display: flex;
+   flex-direction: column;
+   gap: var(--spacing-lg);
+}
+
+/* 操作按钮组 */
+.todo-actions {
+   display: flex;
+   gap: var(--spacing-md);
+}
+
+/* 基础按钮样式 */
+.action-btn {
+   flex: 1;
+   padding: var(--spacing-md);
+   border: none;
+   border-radius: var(--radius-full);
+   background: rgba(255, 255, 255, 0.1);
+   color: var(--text-primary);
+   font-size: var(--font-sm);
+   cursor: pointer;
+   transition: all 0.3s ease;
+}
+
+/* 主操作按钮（前三个） */
+.action-btn:nth-child(-n+3) {
+   background: rgba(46, 204, 113, 0.2);
+   color: #2ecc71;
+}
+
+.action-btn:nth-child(-n+3):hover:not(:disabled) {
+   background: rgba(46, 204, 113, 0.3);
+   transform: translateY(-2px);
+}
+
+/* 排序按钮 */
+.action-btn.time-sort,
+.action-btn.name-sort {
+   background: rgba(241, 196, 15, 0.2);
+   color: #f1c40f;
+   font-size: var(--font-xs);
+}
+
+.action-btn.time-sort:hover,
+.action-btn.name-sort:hover {
+   background: rgba(241, 196, 15, 0.3);
+   transform: translateY(-2px);
+}
+
+/* 撤销/恢复按钮 */
+.action-btn.undo-btn,
+.action-btn.redo-btn {
+   background: rgba(52, 152, 219, 0.2);
+   color: #3498db;
+   font-size: 24px;
+   flex: 0.5;
+}
+
+.action-btn.undo-btn:hover:not(:disabled),
+.action-btn.redo-btn:hover:not(:disabled) {
+   background: rgba(52, 152, 219, 0.3);
+   transform: translateY(-2px);
+}
+
+/* 禁用状态 */
+.action-btn:disabled {
+   opacity: 0.4;
+   cursor: not-allowed;
+   transform: none;
+   background: rgba(255, 255, 255, 0.1) !important;
+   color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Todo 列表 */
+.todo-list {
+   flex: 1;
+   overflow-y: auto;
+   list-style: none;
+   padding: 0;
+   margin: 0;
+}
+
+/* 粒子效果画布 */
+.particles-canvas {
+   position: fixed;
+   top: 0;
+   left: 0;
+   pointer-events: none;
+   z-index: 1000;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+   .todo-container {
+       min-width: auto;
+       padding: var(--spacing-lg);
+   }
+
+   .todo-actions {
+       flex-wrap: wrap;
+       gap: var(--spacing-sm);
+   }
+
+   .action-btn {
+       flex: 1 1 calc(50% - var(--spacing-sm));
+   }
+
+   .action-btn.undo-btn,
+   .action-btn.redo-btn {
+       flex: 0 1 auto;
+       min-width: 42px;
+   }
+}
