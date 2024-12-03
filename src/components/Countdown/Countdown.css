@@ -57,43 +57,34 @@
   cursor: not-allowed;
 }
 
-
-
 .countdown-btn {
-  flex: 1;
-  background: var(--success);
-  color: var(--bg-primary);
-  border: none;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  height: 38px;
-  min-width: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 20px;
-  white-space: nowrap;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 6px;
+  background-color: #4CAF50;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+  margin-left: 8px;
 }
 
-
-
-
-/* 悬浮效果 */
 .countdown-btn:hover {
+  background-color: #45a049;
   transform: translateY(-1px);
-  box-shadow: none;
 }
 
-.countdown-btn:hover {
-  background: #45a049;
+.countdown-btn.clear {
+  background-color: #e74c3c;
 }
 
-
-
-
+.countdown-btn.clear:hover {
+  background-color: #c0392b;
+}
 
 .countdown-display {
   display: flex;
