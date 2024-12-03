@@ -1,12 +1,11 @@
-import React from 'react';
+import { useState } from 'react';
 import './Calendar.css';
 
 const Calendar = () => {
-  const date = new Date();
-  const currentYear = date.getFullYear();
-  const currentMonth = date.getMonth();
-  const currentDay = date.getDate();
-  const currentWeekDay = date.getDay();
+  const [currentMonth] = useState(new Date().getMonth());
+  const [currentYear] = useState(new Date().getFullYear());
+  const [currentDay] = useState(new Date().getDate());
+  const [currentWeekDay] = useState(new Date().getDay());
 
   // 获取当前周的起始和结束日期
   const getWeekDays = () => {
@@ -53,9 +52,6 @@ const Calendar = () => {
     });
   }
 
-  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
-                     '七月', '八月', '九月', '十月', '十一月', '十二月'];
-
   // 判断是否是当前周
   const isCurrentWeek = (day: number, type: string) => {
     if (type !== 'current') return false;
@@ -71,12 +67,6 @@ const Calendar = () => {
   const isWeekend = (index: number) => {
     // 考虑到日历是从周一开始的，所以第6和第7个是周末
     return index % 7 === 5 || index % 7 === 6;
-  };
-
-  // 添加中文月份和数字转中文的函数
-  const getChineseMonth = (month: number) => {
-    const months = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二'];
-    return months[month] + '月';
   };
 
   // 修改获取完整日期的函数
