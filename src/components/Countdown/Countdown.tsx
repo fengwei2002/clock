@@ -140,13 +140,13 @@ const Countdown = forwardRef<CountdownRef>((_, ref) => {
       
       {timeLeft && (
         <div className="countdown-display">
-          <div className="countdown-circle">
-            <div className="countdown-number">
+          <div className={`countdown-circle ${timeLeft.days <= 7 ? 'ending' : ''}`}>
+            <span className="countdown-number">
               {timeLeft.days}
-            </div>
-          </div>
-          <div className="countdown-label">
-            {timeLeft.days > 0 ? '天后' : '今天'}
+            </span>
+            <span className="countdown-label">
+              天
+            </span>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: rgba(255, 248, 235, 0.3);
+  background: var(--bg-secondary);
   border-radius: 12px;
   padding: 20px;
 }
@@ -10,15 +10,15 @@
 .countdown-header {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .countdown-header h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: #2c3e50;
+  color: var(--text-primary);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -35,25 +35,25 @@
 .countdown-input-group input[type="date"] {
   flex: 1;
   padding: 6px 10px;
-  border: 1px solid rgba(233, 236, 239, 0.8);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 0.85rem;
   transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.8);
-  color: #495057;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   height: 38px;
   min-width: 140px;
 }
 
 .countdown-input-group input[type="date"]:focus {
   outline: none;
-  border-color: rgba(233, 236, 239, 0.9);
+  border-color: var(--border-color-hover);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  background: white;
+  background: var(--bg-primary);
 }
 
 .countdown-input-group input[type="date"]:disabled {
-  background: #f8f9fa;
+  background: var(--bg-hover);
   cursor: not-allowed;
 }
 
@@ -87,51 +87,100 @@
 }
 
 .countdown-display {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 20px 0;
-  gap: 12px;
 }
 
 .countdown-circle {
-  width: 120px;
+  min-width: 200px;
+  max-width: 280px;
   height: 120px;
-  border-radius: 50%;
-  background: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 2px solid rgba(76, 175, 80, 0.2);
+  background: var(--bg-hover);
+  border-radius: 16px;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0 24px;
+}
+
+.countdown-circle:hover {
+  background: var(--bg-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 .countdown-number {
-  font-size: 2.8rem;
-  font-weight: 700;
-  color: #2c3e50;
+  font-size: 4.2rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: 'SF Mono', monospace;
+  letter-spacing: 4px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-right: 4px;
 }
 
 .countdown-label {
-  font-size: 1rem;
-  color: #2c3e50;
+  font-size: 1.8rem;
+  color: var(--text-secondary);
   font-weight: 500;
+  margin-top: 8px;
+  opacity: 0.9;
 }
 
-/* 添加响应式设计 */
+/* 当倒计时接近结束时的样式 */
+.countdown-circle.ending {
+  border-color: var(--danger);
+  box-shadow: 0 4px 16px rgba(193, 124, 116, 0.2);
+}
+
+.countdown-circle.ending .countdown-number {
+  color: var(--danger);
+}
+
+/* 响应式布局调整 */
 @media (max-width: 768px) {
   .countdown-circle {
-    width: 100px;
+    min-width: 180px;
+    max-width: 240px;
     height: 100px;
+    padding: 0 20px;
   }
 
   .countdown-number {
-    font-size: 2.2rem;
+    font-size: 3.6rem;
+    letter-spacing: 3px;
   }
 
   .countdown-label {
-    font-size: 0.9rem;
+    font-size: 1.6rem;
+    margin-top: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .countdown-circle {
+    min-width: 160px;
+    max-width: 220px;
+    height: 90px;
+    padding: 0 16px;
+  }
+
+  .countdown-number {
+    font-size: 3.2rem;
+    letter-spacing: 2px;
+  }
+
+  .countdown-label {
+    font-size: 1.4rem;
+    margin-top: 4px;
   }
 }
 
@@ -150,13 +199,4 @@
 
 .countdown-circle {
   animation: pulse 2s infinite ease-in-out;
-}
-
-/* 当倒计时接近结束时的样式 */
-.countdown-circle.ending {
-  border-color: rgba(231, 76, 60, 0.4);
-}
-
-.countdown-circle.ending .countdown-number {
-  color: #e74c3c;
 }

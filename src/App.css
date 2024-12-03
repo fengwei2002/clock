@@ -22,6 +22,10 @@
   --error: #C17C74;          /* 错误/删除 - 柔和红 */
   --error-hover: #A86660;    /* 错误/删除悬浮 */
   --error-bg: rgba(193, 124, 116, 0.1);   /* 错误背景 */
+  --danger: #C17C74;         /* 与 error 相同 - 保持一致性 */
+  --danger-hover: #A86660;   /* 与 error-hover 相同 */
+  --danger-bg: rgba(193, 124, 116, 0.1);  /* 与 error-bg 相同 */
+  --border-color-hover: rgba(150, 140, 100, 0.3);  /* 边框悬浮色 */
   
   /* 交互状态 */
   --hover-opacity: 0.85;

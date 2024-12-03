@@ -125,6 +125,10 @@ const Timer = forwardRef<TimerRef, TimerProps>((_, ref): ReactElement => {
     };
   }, [handleKeyPress]);
 
+  const handleTimeAdjust = (minutes: number) => {
+    adjustTime(minutes);
+  };
+
   return (
     <div 
       className="timer-container"
@@ -150,22 +154,55 @@ const Timer = forwardRef<TimerRef, TimerProps>((_, ref): ReactElement => {
       <div className="timer-display-section">
         <div className="time-adjust left">
           <button 
-            onClick={() => adjustTime(-5)} 
+            onClick={() => handleTimeAdjust(-5)} 
             disabled={isRunning || time < 5 * 60}
+            title="减少 5 分钟"
           >
-            -5:00
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span className="time-value">5</span>
           </button>
           <button 
-            onClick={() => adjustTime(-10)} 
+            onClick={() => handleTimeAdjust(-10)} 
             disabled={isRunning || time < 10 * 60}
+            title="减少 10 分钟"
           >
-            -10:00
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span className="time-value">10</span>
           </button>
           <button 
-            onClick={() => adjustTime(-30)} 
+            onClick={() => handleTimeAdjust(-30)} 
             disabled={isRunning || time < 30 * 60}
+            title="减少 30 分钟"
           >
-            -30:00
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span className="time-value">30</span>
           </button>
         </div>
 
@@ -178,9 +215,60 @@ const Timer = forwardRef<TimerRef, TimerProps>((_, ref): ReactElement => {
         </div>
 
         <div className="time-adjust right">
-          <button onClick={() => adjustTime(5)} disabled={isRunning}>+5:00</button>
-          <button onClick={() => adjustTime(10)} disabled={isRunning}>+10:00</button>
-          <button onClick={() => adjustTime(30)} disabled={isRunning}>+30:00</button>
+          <button 
+            onClick={() => handleTimeAdjust(5)} 
+            disabled={isRunning}
+            title="增加 5 分钟"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span className="time-value">5</span>
+          </button>
+          <button 
+            onClick={() => handleTimeAdjust(10)} 
+            disabled={isRunning}
+            title="增加 10 分钟"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span className="time-value">10</span>
+          </button>
+          <button 
+            onClick={() => handleTimeAdjust(30)} 
+            disabled={isRunning}
+            title="增加 30 分钟"
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            <span className="time-value">30</span>
+          </button>
         </div>
       </div>
 
