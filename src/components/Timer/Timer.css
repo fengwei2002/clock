@@ -253,36 +253,55 @@
   justify-content: center;
   padding: 0 20px;
   white-space: nowrap;
+  gap: 8px;
 }
 
+.control-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.control-btn:hover svg {
+  transform: scale(1.1);
+}
+
+/* 开始和暂停按钮的共同样式 */
 .control-btn.start,
 .control-btn.pause {
   flex: 4;
   min-width: 200px;
-  background: var(--success);
   color: var(--bg-primary);
 }
 
+/* 开始按钮样式 */
+.control-btn.start {
+  background: var(--success);
+}
+
+/* 暂停按钮样式 */
+.control-btn.pause {
+  background: var(--warning, #e67e22);
+}
+
+/* 开始按钮悬浮效果 */
+.control-btn.start:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+/* 暂停按钮悬浮效果 */
+.control-btn.pause:hover {
+  background: #d35400;
+  transform: translateY(-1px);
+}
+
+/* 重置按钮样式 */
 .control-btn.reset {
   flex: 1;
   min-width: 100px;
   background: var(--bg-hover);
   color: var(--text-secondary);
-}
-
-/* 悬浮效果 */
-.control-btn.start:hover,
-.control-btn.pause:hover {
-  transform: translateY(-1px);
-  box-shadow: none;
-}
-
-.control-btn.start:hover {
-  background: #45a049;
-}
-
-.control-btn.pause:hover {
-  background: #e67e22;
 }
 
 .control-btn.reset:hover {
@@ -365,6 +384,14 @@
   .control-btn.pause,
   .control-btn.reset {
     width: auto;
+  }
+
+  .control-btn {
+    padding: 0 12px;
+  }
+  
+  .control-btn span {
+    font-size: 0.9rem;
   }
 }
 

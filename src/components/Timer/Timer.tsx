@@ -128,7 +128,7 @@ const Timer = forwardRef<TimerRef, TimerProps>((_, ref): ReactElement => {
   return (
     <div 
       className="timer-container"
-      tabIndex={0} // 使div可以获得焦点
+      tabIndex={0}
     >
       <div className="mode-switch">
         <button 
@@ -189,13 +189,31 @@ const Timer = forwardRef<TimerRef, TimerProps>((_, ref): ReactElement => {
           className={`control-btn ${isRunning ? 'pause' : 'start'}`}
           onClick={handleStartPause}
         >
-          {isRunning ? 'PAUSE' : 'START'}
+          {isRunning ? (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/>
+                <rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/>
+              </svg>
+              <span>暂停</span>
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 5.14v14.72a1 1 0 001.5.86l11-7.36a1 1 0 000-1.72l-11-7.36a1 1 0 00-1.5.86z" fill="currentColor"/>
+              </svg>
+              <span>开始</span>
+            </>
+          )}
         </button>
         <button 
           className="control-btn reset"
           onClick={handleReset}
         >
-          RESET
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" fill="currentColor"/>
+          </svg>
+          <span>重置</span>
         </button>
       </div>
     </div>
