@@ -14,8 +14,14 @@
   
   /* 功能色 */
   --success: #7FA772;        /* 成功/开始 - 柔和绿 */
+  --success-hover: #6B8F5E;  /* 成功/开始悬浮 */
+  --success-bg: rgba(127, 167, 114, 0.1); /* 成功背景 */
   --warning: #D4A373;        /* 警告/暂停 - 柔和橙 */
+  --warning-hover: #C08E5D;  /* 警告/暂停悬浮 */
+  --warning-bg: rgba(212, 163, 115, 0.1); /* 警告背景 */
   --error: #C17C74;          /* 错误/删除 - 柔和红 */
+  --error-hover: #A86660;    /* 错误/删除悬浮 */
+  --error-bg: rgba(193, 124, 116, 0.1);   /* 错误背景 */
   
   /* 交互状态 */
   --hover-opacity: 0.85;

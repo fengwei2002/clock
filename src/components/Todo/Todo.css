@@ -36,7 +36,7 @@
 
 .todo-header h2::before {
   content: '✓';
-  color: #4CAF50;
+  color: var(--success);
   font-size: 1.2rem;
 }
 
@@ -66,16 +66,16 @@
 
 /* 已完成 badge */
 .todo-stats span:nth-child(2) {
-  background: rgba(240, 255, 244, 0.6);
-  color: #22863a;
-  border-color: rgba(190, 242, 203, 0.5);
+  background: var(--success-bg);
+  color: var(--success);
+  border-color: var(--success);
 }
 
 /* 未完成 badge */
 .todo-stats span:nth-child(3) {
-  background: rgba(255, 245, 245, 0.6);
-  color: #d73a49;
-  border-color: rgba(255, 220, 224, 0.5);
+  background: var(--error-bg);
+  color: var(--error);
+  border-color: var(--error);
 }
 
 /* 悬停效果也调整得更柔和 */
@@ -99,7 +99,7 @@
 }
 
 .todo-list::-webkit-scrollbar-thumb {
-  background-color: rgba(76, 175, 80, 0.2);
+  background-color: var(--success-bg);
   border-radius: 3px;
 }
 
@@ -133,7 +133,7 @@
 .todo-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: rgba(76, 175, 80, 0.2);
+  border-color: var(--success);
   background: rgba(255, 255, 255, 0.95);
 }
 
@@ -142,14 +142,14 @@
   height: 20px;
   cursor: pointer;
   position: relative;
-  border: 2px solid #4CAF50;
+  border: 2px solid var(--success);
   border-radius: 4px;
   appearance: none;
   transition: all 0.3s ease;
 }
 
 .todo-item input[type="checkbox"]:checked {
-  background-color: #4CAF50;
+  background-color: var(--success);
 }
 
 .todo-item input[type="checkbox"]:checked::after {
@@ -202,13 +202,13 @@
 }
 
 .todo-edit-btn:hover {
-  background: rgba(52, 152, 219, 0.15);
-  color: #2980b9;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .todo-delete-btn:hover {
-  background: rgba(231, 76, 60, 0.15);
-  color: #c0392b;
+  background: var(--error-bg);
+  color: var(--error);
 }
 
 .todo-input-container {
@@ -249,8 +249,8 @@
 
 .todo-add-button {
   padding: 12px 24px;
-  background: #4CAF50;
-  color: white;
+  background: var(--success);
+  color: var(--bg-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -268,9 +268,9 @@
 }
 
 .todo-add-button:hover {
-  background: #45a049;
+  background: var(--success-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 4px 12px var(--success-bg);
 }
 
 .todo-add-button:active {
@@ -337,14 +337,14 @@
   left: 0;
   width: 18px;
   height: 18px;
-  border: 2px solid #4CAF50;
+  border: 2px solid var(--success);
   border-radius: 4px;
   transition: all 0.2s ease;
   pointer-events: none;
 }
 
 input[type="checkbox"]:checked + .custom-checkbox {
-  background-color: #4CAF50;
+  background-color: var(--success);
 }
 
 input[type="checkbox"]:checked + .custom-checkbox::after {
@@ -370,7 +370,7 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 .edit-input {
   width: 100%;
   padding: 8px 12px;
-  border: 2px solid #4CAF50;
+  border: 2px solid var(--success);
   border-radius: 6px;
   font-size: 1rem;
   transition: all 0.3s ease;
@@ -378,7 +378,7 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 
 .edit-input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 0 0 3px var(--success-bg);
 }
 
 /* 顶部操作按钮区域 */
@@ -415,8 +415,8 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 }
 
 .action-btn.active {
-  background-color: #4a90e2;
-  color: white;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .action-btn.time-sort,
@@ -450,27 +450,27 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 }
 
 .action-btn.time-sort.active {
-  background: #e3f2fd;
-  border-color: #bbdefb;
-  color: #1976d2;
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
 }
 
 .action-btn.name-sort.active {
-  background: #f3e5f5;
-  border-color: #e1bee7;
-  color: #7b1fa2;
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
 }
 
 .action-btn.time-sort:hover:not(.active) {
-  background: #e3f2fd;
-  border-color: #bbdefb;
-  color: #1976d2;
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
 }
 
 .action-btn.name-sort:hover:not(.active) {
-  background: #f3e5f5;
-  border-color: #e1bee7;
-  color: #7b1fa2;
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
 }
 
 .action-btn:not(.active) {
@@ -482,8 +482,8 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 }
 
 .action-btn.restore {
-  background: rgba(52, 152, 219, 0.1);
-  color: #3498db;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 /* 排序按钮样式 */

@@ -65,8 +65,8 @@
   height: 38px;
   border: none;
   border-radius: 6px;
-  background-color: #4CAF50;
-  color: white;
+  background-color: var(--success);
+  color: var(--bg-primary);
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0;
@@ -74,16 +74,16 @@
 }
 
 .countdown-btn:hover {
-  background-color: #45a049;
+  background-color: var(--success-hover);
   transform: translateY(-1px);
 }
 
 .countdown-btn.clear {
-  background-color: #e74c3c;
+  background-color: var(--danger);
 }
 
 .countdown-btn.clear:hover {
-  background-color: #c0392b;
+  background-color: var(--danger-hover);
 }
 
 .countdown-display {
