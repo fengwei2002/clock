@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 16px;
+  padding: 12px;
   background: var(--bg-secondary);
   color: var(--text-primary);
 }
@@ -11,19 +11,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 4px;
-  border-radius: 8px;
+  margin-bottom: 12px;
+  padding: 2px;
 }
 
 .calendar-title {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-primary);
-  padding: 4px 0;
-  text-align: center;
-  letter-spacing: 0.5px;
-  word-spacing: 4px;
+  padding: 2px 0;
+  letter-spacing: 0.3px;
+  word-spacing: 2px;
 }
 
 .calendar-nav {
@@ -58,13 +55,12 @@
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-weight: 500;
-  color: #666;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 4px 0;
 }
 
 .calendar-weekday {
-  padding: 8px 4px;
+  padding: 4px 2px;
+  font-size: 0.8rem;
 }
 
 .calendar-weekday.current {
@@ -75,8 +71,8 @@
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  padding: 8px 0;
+  gap: 2px;
+  padding: 4px 0;
 }
 
 .calendar-day {
@@ -84,13 +80,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   cursor: pointer;
   border-radius: 50%;
   transition: all 0.2s ease;
   position: relative;
-  margin: 2px;
+  margin: 1px;
+  padding: 2px;
 }
 
 .calendar-day:hover {
@@ -108,7 +105,8 @@
   background: var(--success);
   color: var(--bg-primary);
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 1px 4px rgba(76, 175, 80, 0.2);
+  font-size: 0.8rem;
 }
 
 /* 当前天在当前周的特殊样式 */
@@ -128,15 +126,15 @@
 
 /* 底部事件区域 */
 .calendar-events {
-  margin-top: auto;
-  padding-top: 16px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .calendar-events-title {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #666;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .calendar-event-list {
@@ -146,10 +144,10 @@
 }
 
 .calendar-event {
-  padding: 8px;
+  padding: 4px;
   background: rgba(0, 0, 0, 0.02);
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #2c3e50;
 }
 
