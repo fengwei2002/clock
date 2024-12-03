@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useImperativeHandle, forwardRef, memo } from 'react';
 import { pinyin } from 'pinyin-pro';
 import './Todo.css';
+import { FixedSizeList as List } from 'react-window';
 
 interface TodoItem {
   id: number;
@@ -8,37 +9,6 @@ interface TodoItem {
   completed: boolean;
   createdAt: number;
 }
-
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  color: string;
-  opacity: number;
-}
-
-const createParticles = (x: number, y: number, color: string): Particle[] => {
-  const particles: Particle[] = [];
-  const particleCount = 10;
-
-  for (let i = 0; i < particleCount; i++) {
-    const angle = (Math.PI * 2 * i) / particleCount;
-    const velocity = 2 + Math.random() * 2;
-    particles.push({
-      x,
-      y,
-      vx: Math.cos(angle) * velocity,
-      vy: Math.sin(angle) * velocity,
-      size: 4 + Math.random() * 4,
-      color,
-      opacity: 1
-    });
-  }
-
-  return particles;
-};
 
 interface TodoProps {
   onClearRequest: () => void;
@@ -71,15 +41,51 @@ const ensureUniqueTodos = (todos: TodoItem[]): TodoItem[] => {
   return Array.from(uniqueMap.values());
 };
 
-// 添加常量配置
-const MAX_HISTORY_LENGTH = 100;  // 最大历史记录数量
-const MAX_TODOS_LENGTH = 100;    // 最大待办事项数量
+// 修改常量配置
+const MAX_TODOS_LENGTH = 100;   // 保持不变
+
+// 添加常量
+const MAX_HISTORY_LENGTH = 10;  // 历史记录最大长度
+
+// 添加 TodoItemProps 接口定义
+interface TodoItemProps {
+  todo: TodoItem;
+  editingId: number | null;
+  deletingIds: Set<number>;
+  onDelete: (id: number) => void;
+  onEdit: (todo: TodoItem) => void;
+  onToggle: (id: number) => void;
+  onSaveEdit: () => void;
+  style?: React.CSSProperties;
+}
+
+// 定义动作类型
+type ActionType = 
+  | 'ADD'           // 添加待办
+  | 'DELETE'        // 删除单个
+  | 'EDIT'          // 编辑内容
+  | 'TOGGLE'        // 切换完成状态
+  | 'COMPLETE_ALL'  // 完成所有
+  | 'DELETE_ALL'    // 删除所有
+  | 'RESTORE_ALL'   // 恢复所有
+  | 'DELETE_COMPLETED'  // 删除已完成
+  | 'RESTORE_COMPLETED' // 恢复已完成
+  | 'SORT';            // 排序
+
+// 定义历史记录项的接口
+interface HistoryItem {
+  type: ActionType;
+  todos: TodoItem[];
+  deletedTodos: TodoItem[];
+  deletedCompletedTodos: TodoItem[];
+  timestamp: number;
+}
 
 const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   const [todos, setTodos] = useState<TodoItem[]>(() => {
     const saved = localStorage.getItem('todos');
     const parsedTodos = saved ? JSON.parse(saved) : [];
-    // 确保加载时按最新时间排序
+    // 确保加载时最新时间排序
     return parsedTodos.sort((a: TodoItem, b: TodoItem) => b.createdAt - a.createdAt);
   });
   const [input, setInput] = useState('');
@@ -88,14 +94,15 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   const [deletedCompletedTodos, setDeletedCompletedTodos] = useState<TodoItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
-  const [undoStack, setUndoStack] = useState<TodoItem[][]>([]);
-  const [redoStack, setRedoStack] = useState<TodoItem[][]>([]);
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [sortType, setSortType] = useState<SortType>('time-reverse');
   const [timeSort, setTimeSort] = useState<'asc' | 'desc'>('desc');
   const [nameSort, setNameSort] = useState<'asc' | 'desc'>('asc');
   const inputRef = useRef<HTMLInputElement>(null);
+  const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
+
+  // 在组件内添加历史记录状态
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(-1);
 
   // 保存到本地存储
   useEffect(() => {
@@ -127,102 +134,70 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     }
   }, []);
 
-  // 修改 updateTodos 函数
-  const updateTodos = useCallback((newTodos: TodoItem[], shouldResetStates = true) => {
-    // 检查待办事项数量
+  // 先声明 addHistory
+  const addHistory = useCallback((type: ActionType, newTodos: TodoItem[]) => {
+    setHistory(prev => {
+      const newHistory = prev.slice(0, currentIndex + 1);
+      const historyItem: HistoryItem = {
+        type,
+        todos: newTodos,
+        deletedTodos,
+        deletedCompletedTodos,
+        timestamp: Date.now()
+      };
+      const updatedHistory = [...newHistory, historyItem].slice(-MAX_HISTORY_LENGTH);
+      setCurrentIndex(updatedHistory.length - 1);
+      return updatedHistory;
+    });
+  }, [currentIndex, deletedTodos, deletedCompletedTodos]);
+
+  // 然后再声明 updateTodos
+  const updateTodos = useCallback((newTodos: TodoItem[], type: ActionType = 'ADD', shouldResetStates = true) => {
     if (newTodos.length > MAX_TODOS_LENGTH) {
       alert(`待办事项数量不能超过 ${MAX_TODOS_LENGTH} 条`);
       return;
     }
 
-    // 保存当前状态到撤销栈，并限制长度
-    setUndoStack(stack => {
-      const newStack = [...stack, todos];
-      return newStack.slice(-MAX_HISTORY_LENGTH);
-    });
-    
-    setRedoStack([]); // 清空重做栈
-    
     const uniqueTodos = ensureUniqueTodos(newTodos);
     const sortedTodos = sortTodos(uniqueTodos, sortType);
+    
+    // 添加新的历史记录
+    addHistory(type, sortedTodos);
+    
     setTodos(sortedTodos);
 
     if (shouldResetStates) {
       setDeletedTodos([]);
       setDeletedCompletedTodos([]);
     }
-  }, [todos, sortType, sortTodos]);
+  }, [sortType, sortTodos, addHistory]);
 
   // 修改撤销功能
   const handleUndo = useCallback(() => {
-    if (undoStack.length > 0) {
-      const prevState = undoStack[undoStack.length - 1];
-      const newUndoStack = undoStack.slice(0, -1);
-      
-      // 保存当前状态到重做栈
-      setRedoStack(stack => {
-        const newStack = [...stack, todos];
-        return newStack.slice(-MAX_HISTORY_LENGTH);
-      });
-      
-      setTodos(ensureUniqueTodos(prevState));
-      setUndoStack(newUndoStack);
-
-      // 处理删除状态
-      const currentCompleted = todos.filter(todo => todo.completed);
-      const prevCompleted = prevState.filter(todo => todo.completed);
-
-      if (todos.length === 0 && prevState.length > 0) {
-        setDeletedTodos([]);
-      } else if (todos.length > 0 && prevState.length === 0) {
-        setDeletedTodos(ensureUniqueTodos(todos));
-      }
-
-      if (currentCompleted.length === 0 && prevCompleted.length > 0) {
-        setDeletedCompletedTodos([]);
-      } else if (currentCompleted.length > 0 && prevCompleted.length === 0) {
-        setDeletedCompletedTodos(ensureUniqueTodos(currentCompleted));
-      }
+    if (currentIndex > 0) {
+      const prevItem = history[currentIndex - 1];
+      setTodos(prevItem.todos);
+      setDeletedTodos(prevItem.deletedTodos);
+      setDeletedCompletedTodos(prevItem.deletedCompletedTodos);
+      setCurrentIndex(currentIndex - 1);
     }
-  }, [todos, undoStack]);
+  }, [currentIndex, history]);
 
   // 修改重做功能
   const handleRedo = useCallback(() => {
-    if (redoStack.length > 0) {
-      const nextState = redoStack[redoStack.length - 1];
-      const newRedoStack = redoStack.slice(0, -1);
-      
-      // 保存当前状态到撤销栈
-      setUndoStack(stack => {
-        const newStack = [...stack, todos];
-        return newStack.slice(-MAX_HISTORY_LENGTH);
-      });
-      
-      setTodos(ensureUniqueTodos(nextState));
-      setRedoStack(newRedoStack);
-
-      // 处理删除状态
-      const currentCompleted = todos.filter(todo => todo.completed);
-      const nextCompleted = nextState.filter(todo => todo.completed);
-
-      if (todos.length === 0 && nextState.length > 0) {
-        setDeletedTodos([]);
-      } else if (todos.length > 0 && nextState.length === 0) {
-        setDeletedTodos(todos);
-      }
-
-      if (currentCompleted.length === 0 && nextCompleted.length > 0) {
-        setDeletedCompletedTodos([]);
-      } else if (currentCompleted.length > 0 && nextCompleted.length === 0) {
-        setDeletedCompletedTodos(currentCompleted);
-      }
+    if (currentIndex < history.length - 1) {
+      const nextItem = history[currentIndex + 1];
+      setTodos(nextItem.todos);
+      setDeletedTodos(nextItem.deletedTodos);
+      setDeletedCompletedTodos(nextItem.deletedCompletedTodos);
+      setCurrentIndex(currentIndex + 1);
     }
-  }, [todos, redoStack]);
+  }, [currentIndex, history]);
 
   // 修改创建新待办事项的函数
   const createNewTodo = useCallback((text: string) => {
     if (text.trim()) {
-      // 检查是否达到待办事项数量上限
+      // 检查是否达到待办事项数量
       if (todos.length >= MAX_TODOS_LENGTH) {
         alert(`待办事项数量已达到上限 ${MAX_TODOS_LENGTH} 条`);
         return;
@@ -236,11 +211,12 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
       };
       
       const newTodos = [...todos, newTodo];
-      updateTodos(newTodos);
+      setTodos(newTodos);
+      addHistory('ADD', newTodos);
       setInput('');
       inputRef.current?.focus();
     }
-  }, [todos, updateTodos]);
+  }, [todos, addHistory]);
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -265,43 +241,49 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   };
 
   const toggleTodo = (id: number) => {
-    updateTodos(todos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    updateTodos(
+      todos.map(todo => todo.id === id ? { ...todo, completed: !todo.completed } : todo),
+      'TOGGLE'
+    );
   };
 
-  const deleteTodo = (id: number) => {
-    const todoElement = document.querySelector(`[data-id="${id}"]`);
-    if (todoElement) {
-      const rect = todoElement.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      
-      setParticles(prev => [...prev, ...createParticles(x, y, 'rgba(44, 62, 80, 0.8)')]);
-      updateTodos(todos.filter(todo => todo.id !== id), false);
-    }
-  };
+  const deleteTodo = useCallback((id: number) => {
+    if (deletingIds.has(id)) return;
+
+    setDeletingIds(prev => new Set([...prev, id]));
+    
+    setTimeout(() => {
+      const todoToDelete = todos.find(todo => todo.id === id);
+      if (todoToDelete) {
+        const newTodos = todos.filter(todo => todo.id !== id);
+        updateTodos(newTodos, 'DELETE', false);
+        setDeletingIds(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
+    }, 150);
+  }, [todos, deletingIds, updateTodos]);
 
   // 完成所有/取完成所有
   const toggleAllComplete = () => {
     const allCompleted = todos.every(todo => todo.completed);
-    updateTodos(todos.map(todo => ({
-      ...todo,
-      completed: !allCompleted
-    })));
+    updateTodos(
+      todos.map(todo => ({ ...todo, completed: !allCompleted })),
+      'COMPLETE_ALL'
+    );
   };
 
   // 删除所有/还原所有
   const toggleDeleteAll = () => {
     if (todos.length === 0 && deletedTodos.length > 0) {
-      // 还原所有
       const uniqueTodos = ensureUniqueTodos(deletedTodos);
-      updateTodos(uniqueTodos, false);
+      updateTodos(uniqueTodos, 'RESTORE_ALL', false);
       setDeletedTodos([]);
     } else {
-      // 删除所有
       setDeletedTodos(ensureUniqueTodos([...deletedTodos, ...todos]));
-      updateTodos([], false);
+      updateTodos([], 'DELETE_ALL', false);
     }
   };
 
@@ -310,16 +292,16 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     const completedTodos = todos.filter(todo => todo.completed);
     
     if (completedTodos.length === 0 && deletedCompletedTodos.length > 0) {
-      // 还原已完成项目
       const uniqueTodos = ensureUniqueTodos([...todos, ...deletedCompletedTodos]);
-      updateTodos(uniqueTodos, false);
+      updateTodos(uniqueTodos, 'RESTORE_COMPLETED', false);
       setDeletedCompletedTodos([]);
     } else if (completedTodos.length > 0) {
-      // 删除已完成项目
-      setDeletedCompletedTodos(prevDeleted => {
-        return ensureUniqueTodos([...prevDeleted, ...completedTodos]);
-      });
-      updateTodos(todos.filter(todo => !todo.completed), false);
+      setDeletedCompletedTodos(prev => ensureUniqueTodos([...prev, ...completedTodos]));
+      updateTodos(
+        todos.filter(todo => !todo.completed),
+        'DELETE_COMPLETED',
+        false
+      );
     }
   };
 
@@ -336,73 +318,13 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     active: todos.filter(todo => !todo.completed).length
   };
 
-  useEffect(() => {
-    if (particles.length > 0 && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        setParticles(prevParticles => {
-          const newParticles = prevParticles
-            .map(p => ({
-              ...p,
-              x: p.x + p.vx,
-              y: p.y + p.vy,
-              vy: p.vy + 0.1,
-              opacity: p.opacity - 0.02
-            }))
-            .filter(p => p.opacity > 0);
-
-          // 绘制粒子
-          newParticles.forEach(p => {
-            if (!ctx) return;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(44, 62, 80, ${p.opacity})`;
-            ctx.fill();
-          });
-
-          return newParticles;
-        });
-
-        if (particles.length > 0) {
-          requestAnimationFrame(animate);
-        }
-      };
-
-      animate();
-    }
-  }, [particles]);
-
-  // 暴露重置方法给父组件
-  useImperativeHandle(ref, () => ({
-    resetAllData: () => {
-      setTodos([]);
-      setInput('');
-      setDeletedTodos([]);
-      setDeletedCompletedTodos([]);
-      setEditingId(null);
-      setEditText('');
-      setUndoStack([]);
-      setRedoStack([]);
-      setParticles([]);
-      // 重置排序状态
-      setSortType('time-reverse');
-      setTimeSort('desc');
-      setNameSort('asc');
-    }
-  }));
-
   // 修改时间排序处理函数
   const handleTimeSort = () => {
     const newSort = timeSort === 'asc' ? 'desc' : 'asc';
     setTimeSort(newSort);
     setSortType(newSort === 'asc' ? 'time' : 'time-reverse');
     const sortedTodos = sortTodos(todos, newSort === 'asc' ? 'time' : 'time-reverse');
-    setTodos(sortedTodos);
+    updateTodos(sortedTodos, 'SORT');
   };
 
   // 添加标题排序处理函数
@@ -411,23 +333,23 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     setNameSort(newSort);
     setSortType(newSort === 'asc' ? 'name' : 'name-reverse');
     const sortedTodos = sortTodos(todos, newSort === 'asc' ? 'name' : 'name-reverse');
-    setTodos(sortedTodos);
+    updateTodos(sortedTodos, 'SORT');
   };
 
   // 在 Todo 组件内添加 SVG 图标组件
-  const EditIcon = () => (
+  const EditIcon = memo(() => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
-  );
+  ));
 
-  const DeleteIcon = () => (
+  const DeleteIcon = memo(() => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 6h18" />
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
-  );
+  ));
 
   const SortIcon = ({ direction }: { direction: 'asc' | 'desc' }) => (
     <svg 
@@ -507,6 +429,109 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
       document.removeEventListener('keypress', handleGlobalKeyPress);
     };
   }, []); // 空依赖数组，只在组件挂载和卸载时执行
+
+  // 将 TodoItem 提取为单独的组件
+  const TodoItem = memo(({ 
+    todo, 
+    editingId, 
+    deletingIds,
+    onDelete, 
+    onEdit, 
+    onToggle, 
+    onSaveEdit 
+  }: TodoItemProps) => {
+    const [editText, setEditText] = useState(todo.text);
+
+    return (
+      <li 
+        className={`todo-item ${todo.completed ? 'completed-item' : ''} ${
+          deletingIds.has(todo.id) ? 'deleting' : ''
+        }`}
+        data-id={todo.id}
+      >
+        {editingId === todo.id ? (
+          <div className="edit-form">
+            <input
+              type="text"
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onBlur={onSaveEdit}
+              onKeyPress={(e) => e.key === 'Enter' && onSaveEdit()}
+              autoFocus
+              className="edit-input"
+            />
+          </div>
+        ) : (
+          <label className="todo-label">
+            <div className="checkbox-wrapper">
+              <input
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => onToggle(todo.id)}
+              />
+              <span className="custom-checkbox"></span>
+            </div>
+            <div className="todo-content">
+              <div className="todo-text">
+                <span 
+                  className={todo.completed ? 'completed' : ''}
+                  onDoubleClick={() => !todo.completed && onEdit(todo)}
+                >
+                  {todo.text}
+                </span>
+              </div>
+              <span className="todo-timestamp">
+                {formatTimestamp(todo.createdAt)}
+              </span>
+            </div>
+          </label>
+        )}
+        <div className="todo-actions">
+          {!todo.completed && !editingId && !deletingIds.has(todo.id) && (
+            <button
+              onClick={() => onEdit(todo)}
+              className="todo-action-btn todo-edit-btn"
+              title="编辑"
+            >
+              <EditIcon />
+            </button>
+          )}
+          <button
+            onClick={() => onDelete(todo.id)}
+            className="todo-action-btn todo-delete-btn"
+            title="删除"
+            disabled={deletingIds.has(todo.id)}
+          >
+            <DeleteIcon />
+          </button>
+        </div>
+      </li>
+    );
+  });
+
+  // 在组件内部添加
+  useImperativeHandle(ref, () => ({
+    resetAllData: () => {
+      setTodos([]);
+      setInput('');
+      setDeletedTodos([]);
+      setDeletedCompletedTodos([]);
+      setEditingId(null);
+      setEditText('');
+      setSortType('time-reverse');
+      setTimeSort('desc');
+      setNameSort('asc');
+      setDeletingIds(new Set());
+    }
+  }));
+
+  // 在组件开始处添加初始历史记录
+  useEffect(() => {
+    if (todos.length > 0 && history.length === 0) {
+      // 初始化历史记录
+      addHistory('ADD', todos);
+    }
+  }, []); // 仅在��件挂载时执行
 
   return (
     <div className="todo-container">
@@ -606,7 +631,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
           type="button"
           className="action-btn undo-btn"
           onClick={handleUndo}
-          disabled={undoStack.length === 0}
+          disabled={currentIndex <= 0}
           title="撤销"
         >
           <UndoIcon />
@@ -615,88 +640,34 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
           type="button"
           className="action-btn redo-btn"
           onClick={handleRedo}
-          disabled={redoStack.length === 0}
+          disabled={currentIndex >= history.length - 1}
           title="重做"
         >
           <RedoIcon />
         </button>
       </div>
 
-      <ul className="todo-list">
-        {todos.map(todo => (
-          <li 
-            key={todo.id} 
-            className={`todo-item ${todo.completed ? 'completed-item' : ''}`}
-            data-id={todo.id}
-          >
-            {editingId === todo.id ? (
-              <div className="edit-form">
-                <input
-                  type="text"
-                  value={editText}
-                  onChange={(e) => setEditText(e.target.value)}
-                  onBlur={saveEdit}
-                  onKeyPress={(e) => e.key === 'Enter' && saveEdit()}
-                  autoFocus
-                  className="edit-input"
-                />
-              </div>
-            ) : (
-              <label className="todo-label">
-                <div className="checkbox-wrapper">
-                  <input
-                    type="checkbox"
-                    checked={todo.completed}
-                    onChange={() => toggleTodo(todo.id)}
-                  />
-                  <span className="custom-checkbox"></span>
-                </div>
-                <div className="todo-content">
-                  <div className="todo-text">
-                    <span 
-                      className={todo.completed ? 'completed' : ''}
-                      onDoubleClick={() => !todo.completed && startEditing(todo)}
-                    >
-                      {todo.text}
-                    </span>
-                  </div>
-                  <span className="todo-timestamp">
-                    {formatTimestamp(todo.createdAt)}
-                  </span>
-                </div>
-              </label>
-            )}
-            <div className="todo-actions">
-              {!todo.completed && !editingId && (
-                <button
-                  onClick={() => startEditing(todo)}
-                  className="todo-action-btn todo-edit-btn"
-                  title="编辑"
-                >
-                  <EditIcon />
-                </button>
-              )}
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                className="todo-action-btn todo-delete-btn"
-                title="删除"
-              >
-                <DeleteIcon />
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <canvas
-        ref={canvasRef}
-        className="particles-canvas"
-        width={window.innerWidth}
-        height={300}
-        style={{
-          width: '100%',
-          height: '100%'
-        }}
-      />
+      <List
+        height={400}
+        itemCount={todos.length}
+        itemSize={70}
+        width="100%"
+        className="todo-list"
+      >
+        {({ index, style }) => (
+          <TodoItem
+            key={todos[index].id}
+            todo={todos[index]}
+            style={style}
+            editingId={editingId}
+            deletingIds={deletingIds}
+            onDelete={deleteTodo}
+            onEdit={startEditing}
+            onToggle={toggleTodo}
+            onSaveEdit={saveEdit}
+          />
+        )}
+      </List>
     </div>
   );
 });

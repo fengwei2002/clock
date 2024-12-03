@@ -84,8 +84,17 @@
   align-items: center;
   gap: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
   border: 1px solid rgba(0, 0, 0, 0.06);
+  opacity: 1;
+  transform: translateX(0);
+  transition: transform 150ms ease-out, opacity 150ms ease-out;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.todo-item.deleting {
+  transform: translateX(-20px);
+  opacity: 0;
 }
 
 .todo-item:hover {
@@ -135,7 +144,7 @@
   display: flex;
   gap: 8px;
   opacity: 0;
-  transition: all 0.3s ease;
+  transition: opacity 0.15s ease-out;
   margin-left: auto;
 }
 
@@ -230,14 +239,6 @@
 .todo-add-button:active {
   transform: translateY(1px);
   box-shadow: none;
-}
-
-.particles-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 10;
 }
 
 .todo-label {
@@ -456,4 +457,21 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
   background: #45a049;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.todo-action-btn:active {
+  transform: scale(0.95);
+}
+
+.todo-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 禁用不必要的动画 */
+@media (prefers-reduced-motion: reduce) {
+  .todo-item {
+    transition: none;
+  }
 }
