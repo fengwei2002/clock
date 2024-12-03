@@ -10,6 +10,7 @@
   overflow: hidden;
   outline: none;
   position: relative;
+  transform-origin: center center;
 }
 
 /* 添加焦点指示器 */
@@ -81,6 +82,8 @@
   position: relative;
   border: 2px solid var(--border-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  min-height: 120px;
+  flex-shrink: 0;
 }
 
 .timer-display:hover {
@@ -147,9 +150,11 @@
 
 /* 模式切换按钮 */
 .mode-switch {
+  flex: 0 0 auto;
+  margin-bottom: 12px;
+  min-height: 32px;
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
   padding: 1px;
   background: var(--bg-hover);
   border-radius: 10px;
@@ -185,13 +190,18 @@
 
 /* 时间调整区域 */
 .timer-display-section {
-  display: flex;
+  flex: 1 0 auto;
+  min-height: 160px;
+  justify-content: center;
   align-items: center;
+  display: flex;
   gap: 12px;
   margin: 12px 0;
 }
 
 .time-adjust {
+  flex: 0 1 auto;
+  min-height: 32px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -221,9 +231,13 @@
 
 /* 主控制按钮 */
 .main-controls {
+  flex: 0 0 auto;
+  min-height: 42px;
+  margin-top: auto;
   display: flex;
   gap: 12px;
-  margin-top: 16px;
+  width: 100%;
+  justify-content: center;
 }
 
 .control-btn {
@@ -233,30 +247,27 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  height: 38px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 20px;
+  white-space: nowrap;
 }
 
-.control-btn.start {
-  flex: 2;
-  background: var(--success);
-  color: var(--bg-primary);
-}
-
+.control-btn.start,
 .control-btn.pause {
-  flex: 2;
-  background: var(--warning);
+  flex: 4;
+  min-width: 200px;
+  background: var(--success);
   color: var(--bg-primary);
 }
 
 .control-btn.reset {
   flex: 1;
+  min-width: 100px;
   background: var(--bg-hover);
   color: var(--text-secondary);
-  min-width: 80px;
 }
 
 /* 悬浮效果 */
@@ -342,4 +353,56 @@
   font-size: 1rem;
   font-weight: 500;
   opacity: 0.85;
+}
+
+/* 确保按钮容器在小屏幕上也能正确显示 */
+@media (max-width: 480px) {
+  .main-controls {
+    flex-direction: row;
+  }
+
+  .control-btn.start,
+  .control-btn.pause,
+  .control-btn.reset {
+    width: auto;
+  }
+}
+
+/* 添加响应式缩放 */
+@media (max-height: 800px) {
+  .timer-container {
+    gap: 12px;
+  }
+  
+  .mode-switch {
+    margin-bottom: 8px;
+  }
+  
+  .timer-display-section {
+    min-height: 140px;
+  }
+}
+
+@media (max-height: 700px) {
+  .timer-container {
+    gap: 8px;
+  }
+  
+  .timer-display-section {
+    min-height: 120px;
+  }
+  
+  .time-adjust {
+    gap: 4px;
+  }
+}
+
+@media (max-height: 600px) {
+  .mode-switch {
+    display: none;
+  }
+  
+  .time-adjust button {
+    padding: 4px 8px;
+  }
 }

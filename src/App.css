@@ -22,6 +22,14 @@
   --disabled-opacity: 0.5;
 }
 
+.app-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  background-color: var(--bg-primary);
+}
+
 .app-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -30,6 +38,8 @@
   padding: 2vh;
   box-sizing: border-box;
   background-color: var(--bg-primary);
+  max-width: 1920px;
+  width: 100%;
 }
 
 .main-section {
@@ -50,22 +60,23 @@
   gap: 2vh;
   height: 96vh;
   overflow: hidden;
+  min-height: 0;
 }
 
 .timer-section {
   height: 45vh;
-  min-height: 0;
-  flex: none;
+  min-height: 300px;
+  flex: 0 0 auto;
   overflow: hidden;
 }
 
 .bottom-widgets {
-  flex: 1;
+  flex: 1 1 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2vh;
+  min-height: 300px;
   height: calc(51vh - 2vh);
-  min-height: 0;
 }
 
 .timer-section,
@@ -81,10 +92,10 @@
 .countdown-section,
 .calendar-section {
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  min-height: 0;
 }
 
 /* 响应式布局 */
@@ -99,9 +110,11 @@
 @media (max-height: 800px) {
   .timer-section {
     height: 42vh;
+    min-height: 250px;
   }
   
   .bottom-widgets {
+    min-height: 250px;
     height: calc(54vh - 2vh);
   }
 }
@@ -109,10 +122,12 @@
 @media (max-height: 700px) {
   .timer-section {
     height: 40vh;
+    min-height: 220px;
   }
   
   .bottom-widgets {
     grid-template-columns: 1fr;
+    min-height: 220px;
   }
 
   .calendar-section {
@@ -123,6 +138,7 @@
 @media (max-height: 600px) {
   .timer-section {
     height: 38vh;
+    min-height: 200px;
   }
   
   .bottom-widgets {
@@ -210,4 +226,23 @@ button:disabled {
 /* 文字颜色统一 */
 body {
   color: var(--text-primary);
+}
+
+/* 在超宽屏幕下保持合理的组件大小 */
+@media (min-width: 1921px) {
+  .app-container {
+    padding: 2vh calc((100% - 1920px) / 2 + 2vh);
+  }
+}
+
+@media (min-height: 1000px) {
+  .timer-section {
+    height: 42vh;
+    max-height: 500px;
+  }
+  
+  .bottom-widgets {
+    height: calc(54vh - 2vh);
+    max-height: 600px;
+  }
 }

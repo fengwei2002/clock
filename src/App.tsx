@@ -14,29 +14,31 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="app-container">
-      <div className="main-section">
-        <Todo onClearRequest={handleClearRequest} />
-      </div>
-      
-      <div className="right-section">
-        <div className="timer-section">
-          <Timer />
+    <div className="app-wrapper">
+      <div className="app-container">
+        <div className="main-section">
+          <Todo onClearRequest={handleClearRequest} />
         </div>
-        <div className="bottom-widgets">
-          <div className="countdown-section">
-            <Countdown />
+        
+        <div className="right-section">
+          <div className="timer-section">
+            <Timer />
           </div>
-          <div className="calendar-section">
-            <Calendar />
+          <div className="bottom-widgets">
+            <div className="countdown-section">
+              <Countdown />
+            </div>
+            <div className="calendar-section">
+              <Calendar />
+            </div>
           </div>
         </div>
-      </div>
 
-      <Clear
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+        <Clear
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+      </div>
     </div>
   );
 };
