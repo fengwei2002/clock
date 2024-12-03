@@ -428,7 +428,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   useEffect(() => {
     // 页面加载时自动聚焦
     inputRef.current?.focus();
-  }, []); // 空依赖数组意味着只在组件挂载时执行
+  }, []); // 空依赖数组意味着只在组件挂载时行
 
   useEffect(() => {
     const handleGlobalKeyPress = (e: KeyboardEvent) => {
@@ -482,6 +482,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
         style={style}
       >
         {editingId === todo.id ? (
+          // 编辑模式
           <div className="edit-form">
             <input
               type="text"
@@ -494,49 +495,54 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
             />
           </div>
         ) : (
-          <label className="todo-label">
-            <div className="checkbox-wrapper">
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => onToggle(todo.id)}
-              />
-              <span className="custom-checkbox"></span>
-            </div>
-            <div className="todo-content">
-              <div className="todo-text">
-                <span 
-                  className={todo.completed ? 'completed' : ''}
-                  onDoubleClick={() => !todo.completed && onEdit(todo)}
-                >
-                  {todo.text}
-                </span>
+          // 显示模式
+          <>
+            <label className="todo-label">
+              <div className="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  checked={todo.completed}
+                  onChange={() => onToggle(todo.id)}
+                />
+                <span className="custom-checkbox"></span>
               </div>
+              <div className="todo-content">
+                <div className="todo-text">
+                  <span 
+                    className={todo.completed ? 'completed' : ''}
+                    onDoubleClick={() => !todo.completed && onEdit(todo)}
+                  >
+                    {todo.text}
+                  </span>
+                </div>
+              </div>
+            </label>
+            <div className="todo-actions-wrapper">
               <span className="todo-timestamp">
                 <TimeIcon /> {formatTimestamp(todo.createdAt)}
               </span>
+              <div className="todo-actions">
+                {!editingId && !deletingIds.has(todo.id) && (
+                  <button
+                    onClick={() => onEdit(todo)}
+                    className="todo-action-btn todo-edit-btn"
+                    title="编辑"
+                  >
+                    <EditIcon />
+                  </button>
+                )}
+                <button
+                  onClick={() => onDelete(todo.id)}
+                  className="todo-action-btn todo-delete-btn"
+                  title="删除"
+                  disabled={deletingIds.has(todo.id)}
+                >
+                  <DeleteIcon />
+                </button>
+              </div>
             </div>
-          </label>
+          </>
         )}
-        <div className="todo-actions">
-          {!todo.completed && !editingId && !deletingIds.has(todo.id) && (
-            <button
-              onClick={() => onEdit(todo)}
-              className="todo-action-btn todo-edit-btn"
-              title="编辑"
-            >
-              <EditIcon />
-            </button>
-          )}
-          <button
-            onClick={() => onDelete(todo.id)}
-            className="todo-action-btn todo-delete-btn"
-            title="删除"
-            disabled={deletingIds.has(todo.id)}
-          >
-            <DeleteIcon />
-          </button>
-        </div>
       </li>
     );
   });
@@ -744,9 +750,10 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
       <List
         height={400}
         itemCount={todos.length}
-        itemSize={70}
+        itemSize={60}
         width="100%"
         className="todo-list"
+        overscanCount={5}
       >
         {({ index, style }) => (
           <TodoItem
