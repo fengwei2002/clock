@@ -84,7 +84,7 @@
 .calendar-section {
   background: var(--bg-secondary);
   border-radius: 1.5vh;
-  padding: 2vh;
+  padding: 1vh;
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-color);
 }
