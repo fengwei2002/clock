@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useImperativeHandle, forwardRef, memo } from 'react';
 import { pinyin } from 'pinyin-pro';
 import './Todo.css';
+import './TodoItem.css';
 import { FixedSizeList as List } from 'react-window';
 
 interface TodoItem {
@@ -686,57 +687,58 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
         >
           {hasDeletedCompletedTodos ? '恢复已完成' : '删除已完成'}
         </button>
-        <button
-          type="button"
-          className={`action-btn time-sort ${sortType.startsWith('time') ? 'active' : ''}`}
-          onClick={handleTimeSort}
-          title="点击切换时间排序方向"
-        >
-          {sortType === 'time-new' ? (
-            <>
-              <TimeNewIcon /> 最新
-            </>
-          ) : (
-            <>
-              <TimeOldIcon /> 最早
-            </>
-          )}
-        </button>
-        <button
-          type="button"
-          className={`action-btn name-sort ${sortType.startsWith('name') ? 'active' : ''}`}
-          onClick={handleNameSort}
-          title="点击切换标题排序方向"
-          style={{ display: 'flex', alignItems: 'center', gap: '2px' }}
-        >
-          {sortType === 'name-az' ? (
-            <>
-              A<ArrowIcon />Z
-            </>
-          ) : (
-            <>
-              Z<ArrowIcon />A
-            </>
-          )}
-        </button>
-        <button
-          type="button"
-          className="action-btn undo-btn"
-          onClick={handleUndo}
-          disabled={currentIndex <= 0}
-          title="撤销"
-        >
-          <UndoIcon />
-        </button>
-        <button
-          type="button"
-          className="action-btn redo-btn"
-          onClick={handleRedo}
-          disabled={currentIndex >= history.length - 1}
-          title="重做"
-        >
-          <RedoIcon />
-        </button>
+        <div className="sort-actions">
+          <button
+            type="button"
+            className={`action-btn time-sort ${sortType.startsWith('time') ? 'active' : ''}`}
+            onClick={handleTimeSort}
+          >
+            {sortType === 'time-new' ? (
+              <>
+                <TimeNewIcon /> 最新
+              </>
+            ) : (
+              <>
+                <TimeOldIcon /> 最早
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            className={`action-btn name-sort ${sortType.startsWith('name') ? 'active' : ''}`}
+            onClick={handleNameSort}
+          >
+            {sortType === 'name-az' ? (
+              <>
+                A<ArrowIcon />Z
+              </>
+            ) : (
+              <>
+                Z<ArrowIcon />A
+              </>
+            )}
+          </button>
+        </div>
+        <div className="history-actions">
+          <button
+            type="button"
+            className="action-btn undo-btn"
+            onClick={handleUndo}
+            disabled={currentIndex <= 0}
+            title="撤销"
+          >
+            <UndoIcon />
+          </button>
+          <button
+            type="button"
+            className="action-btn redo-btn"
+            onClick={handleRedo}
+            disabled={currentIndex >= history.length - 1}
+            title="重做"
+          >
+            <RedoIcon />
+          </button>
+        </div>
       </div>
 
       <List
