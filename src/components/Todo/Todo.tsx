@@ -19,19 +19,32 @@ export interface TodoRef {
 }
 
 // 添加排序类型
-type SortType = 'time' | 'time-reverse' | 'name' | 'name-reverse' | 'none';
+type SortType = 'time-new' | 'time-old' | 'name-az' | 'name-za';
 
 // 添加时间格式化函数
 const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const now = new Date();
   
-  return `${year} 年 ${month} 月 ${day} 日 ${hours}:${minutes}:${seconds}`;
+  // 如果是今天
+  if (date.toDateString() === now.toDateString()) {
+    return `今天 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+  
+  // 如果是昨天
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return `昨天 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+  
+  // 如果是今年
+  if (date.getFullYear() === now.getFullYear()) {
+    return `${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+  
+  // 其他情况
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
 };
 
 // 添加一个工具函数来确保列表唯一性
@@ -55,7 +68,7 @@ interface TodoItemProps {
   onDelete: (id: number) => void;
   onEdit: (todo: TodoItem) => void;
   onToggle: (id: number) => void;
-  onSaveEdit: () => void;
+  onSaveEdit: (newText: string) => void;
   style?: React.CSSProperties;
 }
 
@@ -93,10 +106,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   
   const [deletedCompletedTodos, setDeletedCompletedTodos] = useState<TodoItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editText, setEditText] = useState('');
-  const [sortType, setSortType] = useState<SortType>('time-reverse');
-  const [timeSort, setTimeSort] = useState<'asc' | 'desc'>('desc');
-  const [nameSort, setNameSort] = useState<'asc' | 'desc'>('asc');
+  const [sortType, setSortType] = useState<SortType>('time-new');
   const inputRef = useRef<HTMLInputElement>(null);
   const [deletingIds, setDeletingIds] = useState<Set<number>>(new Set());
 
@@ -112,18 +122,19 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   // 修改排序函数
   const sortTodos = useCallback((todos: TodoItem[], type: SortType) => {
     const sortedTodos = [...todos];
+    
     switch (type) {
-      case 'time':
-        return sortedTodos.sort((a, b) => a.createdAt - b.createdAt);
-      case 'time-reverse':
+      case 'time-new': // 新的在前（最近创建的在前）
         return sortedTodos.sort((a, b) => b.createdAt - a.createdAt);
-      case 'name':
+      case 'time-old': // 旧的在前（最早创建的在前）
+        return sortedTodos.sort((a, b) => a.createdAt - b.createdAt);
+      case 'name-az': // A到Z
         return sortedTodos.sort((a, b) => {
           const pinyinA = pinyin(a.text, { toneType: 'none', type: 'array' });
           const pinyinB = pinyin(b.text, { toneType: 'none', type: 'array' });
           return pinyinA[0].localeCompare(pinyinB[0]);
         });
-      case 'name-reverse':
+      case 'name-za': // Z到A
         return sortedTodos.sort((a, b) => {
           const pinyinA = pinyin(a.text, { toneType: 'none', type: 'array' });
           const pinyinB = pinyin(b.text, { toneType: 'none', type: 'array' });
@@ -159,16 +170,19 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     }
 
     const uniqueTodos = ensureUniqueTodos(newTodos);
-    const sortedTodos = sortTodos(uniqueTodos, sortType);
+    // 只有非排序操作才需要排序
+    const finalTodos = type === 'SORT' ? uniqueTodos : sortTodos(uniqueTodos, sortType);
     
-    // 添加新的历史记录
-    addHistory(type, sortedTodos);
-    
-    setTodos(sortedTodos);
+    addHistory(type, finalTodos);
+    setTodos(finalTodos);
 
     if (shouldResetStates) {
       setDeletedTodos([]);
       setDeletedCompletedTodos([]);
+    }
+    
+    if (type === 'EDIT') {
+      setEditingId(null);
     }
   }, [sortType, sortTodos, addHistory]);
 
@@ -227,17 +241,22 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
 
   const startEditing = (todo: TodoItem) => {
     setEditingId(todo.id);
-    setEditText(todo.text);
   };
 
-  const saveEdit = () => {
-    if (editingId && editText.trim()) {
-      updateTodos(todos.map(todo =>
-        todo.id === editingId ? { ...todo, text: editText.trim() } : todo
-      ));
+  const saveEdit = (newText: string) => {
+    if (editingId && newText.trim()) {
+      const newTodos = todos.map(todo =>
+        todo.id === editingId 
+          ? { 
+              ...todo, 
+              text: newText.trim(),
+              createdAt: Date.now()
+            } 
+          : todo
+      );
+      updateTodos(newTodos, 'EDIT');
     }
     setEditingId(null);
-    setEditText('');
   };
 
   const toggleTodo = (id: number) => {
@@ -319,22 +338,27 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   };
 
   // 修改时间排序处理函数
-  const handleTimeSort = () => {
-    const newSort = timeSort === 'asc' ? 'desc' : 'asc';
-    setTimeSort(newSort);
-    setSortType(newSort === 'asc' ? 'time' : 'time-reverse');
-    const sortedTodos = sortTodos(todos, newSort === 'asc' ? 'time' : 'time-reverse');
-    updateTodos(sortedTodos, 'SORT');
-  };
+  const handleTimeSort = useCallback(() => {
+    setSortType(current => {
+      // 仿照标题排序的逻辑
+      const newSortType = current === 'time-new' ? 'time-old' : 'time-new';
+      // 立即按新的排序类型重新排序
+      const sortedTodos = sortTodos(todos, newSortType);
+      updateTodos(sortedTodos, 'SORT');
+      return newSortType;
+    });
+  }, [todos, sortTodos, updateTodos]);
 
-  // 添加标题排序处理函数
-  const handleNameSort = () => {
-    const newSort = nameSort === 'asc' ? 'desc' : 'asc';
-    setNameSort(newSort);
-    setSortType(newSort === 'asc' ? 'name' : 'name-reverse');
-    const sortedTodos = sortTodos(todos, newSort === 'asc' ? 'name' : 'name-reverse');
-    updateTodos(sortedTodos, 'SORT');
-  };
+  // 修改名称排序处理函数
+  const handleNameSort = useCallback(() => {
+    setSortType(current => {
+      const newSortType = current === 'name-az' ? 'name-za' : 'name-az';
+      // 立即按新的排序类型重新排序
+      const sortedTodos = sortTodos(todos, newSortType);
+      updateTodos(sortedTodos, 'SORT');
+      return newSortType;
+    });
+  }, [todos, sortTodos, updateTodos]);
 
   // 在 Todo 组件内添加 SVG 图标组件
   const EditIcon = memo(() => (
@@ -350,26 +374,6 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
     </svg>
   ));
-
-  const SortIcon = ({ direction }: { direction: 'asc' | 'desc' }) => (
-    <svg 
-      width="12" 
-      height="12" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      style={{ 
-        transform: direction === 'desc' ? 'rotate(180deg)' : 'none',
-        transition: 'transform 0.3s ease'
-      }}
-    >
-      <path d="M12 20V4" />
-      <path d="M5 11l7-7 7 7" />
-    </svg>
-  );
 
   const UndoIcon = () => (
     <svg 
@@ -403,6 +407,23 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     </svg>
   );
 
+  // 添加时间图标组件
+  const TimeIcon = memo(() => (
+    <svg 
+      width="12" 
+      height="12" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10"/>
+      <polyline points="12 6 12 12 16 14"/>
+    </svg>
+  ));
+
   useEffect(() => {
     // 页面加载时自动聚焦
     inputRef.current?.focus();
@@ -410,7 +431,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
 
   useEffect(() => {
     const handleGlobalKeyPress = (e: KeyboardEvent) => {
-      // 如果当前焦点不在输入框或编辑框上，且按下了回车键
+      // 如果当前焦点不在输入框或编上，且按下了回车键
       const activeElement = document.activeElement;
       const isInputActive = activeElement instanceof HTMLInputElement || 
                            activeElement instanceof HTMLTextAreaElement;
@@ -428,7 +449,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     return () => {
       document.removeEventListener('keypress', handleGlobalKeyPress);
     };
-  }, []); // 空依赖数组，只在组件挂载和卸载时执行
+  }, []); // 空依赖数组，只组件挂载和卸载时执行
 
   // 将 TodoItem 提取为单独的组件
   const TodoItem = memo(({ 
@@ -438,9 +459,18 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     onDelete, 
     onEdit, 
     onToggle, 
-    onSaveEdit 
+    onSaveEdit,
+    style 
   }: TodoItemProps) => {
-    const [editText, setEditText] = useState(todo.text);
+    const [localEditText, setLocalEditText] = useState(todo.text);
+
+    useEffect(() => {
+      setLocalEditText(todo.text);
+    }, [todo.text]);
+
+    const handleSave = () => {
+      onSaveEdit(localEditText);
+    };
 
     return (
       <li 
@@ -448,15 +478,16 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
           deletingIds.has(todo.id) ? 'deleting' : ''
         }`}
         data-id={todo.id}
+        style={style}
       >
         {editingId === todo.id ? (
           <div className="edit-form">
             <input
               type="text"
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onBlur={onSaveEdit}
-              onKeyPress={(e) => e.key === 'Enter' && onSaveEdit()}
+              value={localEditText}
+              onChange={(e) => setLocalEditText(e.target.value)}
+              onBlur={handleSave}
+              onKeyPress={(e) => e.key === 'Enter' && handleSave()}
               autoFocus
               className="edit-input"
             />
@@ -481,7 +512,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
                 </span>
               </div>
               <span className="todo-timestamp">
-                {formatTimestamp(todo.createdAt)}
+                <TimeIcon /> {formatTimestamp(todo.createdAt)}
               </span>
             </div>
           </label>
@@ -517,10 +548,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
       setDeletedTodos([]);
       setDeletedCompletedTodos([]);
       setEditingId(null);
-      setEditText('');
-      setSortType('time-reverse');
-      setTimeSort('desc');
-      setNameSort('asc');
+      setSortType('time-new');
       setDeletingIds(new Set());
     }
   }));
@@ -528,10 +556,61 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   // 在组件开始处添加初始历史记录
   useEffect(() => {
     if (todos.length > 0 && history.length === 0) {
-      // 初始化历史记录
       addHistory('ADD', todos);
     }
-  }, []); // 仅在��件挂载时执行
+  }, [todos, history.length, addHistory]); // 添加必要的依赖
+  // 修改排序图标组件
+  const TimeNewIcon = memo(() => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21V3"/>
+      <path d="M5 14l7 7 7-7"/>
+    </svg>
+  ));
+
+  const TimeOldIcon = memo(() => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v18"/>
+      <path d="M5 10l7-7 7 7"/>
+    </svg>
+  ));
+
+  // 添加箭头图标组件
+  const ArrowIcon = memo(() => (
+    <svg 
+      width="14" 
+      height="14" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      style={{ margin: '0 2px' }}
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
+    </svg>
+  ));
+
+  // 添加垃圾桶图标组件
+  const TrashIcon = memo(() => (
+    <svg 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    >
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <line x1="10" y1="11" x2="10" y2="17" />
+      <line x1="14" y1="11" x2="14" y2="17" />
+    </svg>
+  ));
 
   return (
     <div className="todo-container">
@@ -542,22 +621,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
             onClick={onClearRequest}
             title="清除所有数据"
           >
-            <svg 
-              width="16" 
-              height="16" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M3 6h18" />
-              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-              <line x1="10" y1="11" x2="10" y2="17" />
-              <line x1="14" y1="11" x2="14" y2="17" />
-            </svg>
+            <TrashIcon />
           </button>
           <div className="todo-stats">
             <span>总计: {stats.total}</span>
@@ -572,15 +636,28 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="输入框。"
+            placeholder="添加新的待办事项..."
             className="todo-input"
           />
           <button 
             type="button" 
             className="todo-add-btn" 
             onClick={() => createNewTodo(input)}
+            title="添加待办事项"
           >
-            添加
+            <svg  
+              width="20" 
+              height="20" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
           </button>
         </div>
       </div>
@@ -611,21 +688,36 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
         </button>
         <button
           type="button"
-          className="action-btn time-sort"
+          className={`action-btn time-sort ${sortType.startsWith('time') ? 'active' : ''}`}
           onClick={handleTimeSort}
-          title={timeSort === 'asc' ? '当前按时间升序' : '当前按时间降序'}
+          title="点击切换时间排序方向"
         >
-          时间
-          <SortIcon direction={timeSort} />
+          {sortType === 'time-new' ? (
+            <>
+              <TimeNewIcon /> 最新
+            </>
+          ) : (
+            <>
+              <TimeOldIcon /> 最早
+            </>
+          )}
         </button>
         <button
           type="button"
-          className="action-btn name-sort"
+          className={`action-btn name-sort ${sortType.startsWith('name') ? 'active' : ''}`}
           onClick={handleNameSort}
-          title={nameSort === 'asc' ? '当前按标题升序' : '当前按标题降序'}
+          title="点击切换标题排序方向"
+          style={{ display: 'flex', alignItems: 'center', gap: '2px' }}
         >
-          标题
-          <SortIcon direction={nameSort} />
+          {sortType === 'name-az' ? (
+            <>
+              A<ArrowIcon />Z
+            </>
+          ) : (
+            <>
+              Z<ArrowIcon />A
+            </>
+          )}
         </button>
         <button
           type="button"

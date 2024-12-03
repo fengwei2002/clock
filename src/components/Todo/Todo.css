@@ -5,6 +5,9 @@
   min-height: 0;
   position: relative;
   max-height: 100%;
+  background: rgba(255, 248, 235, 0.3);
+  border-radius: 12px;
+  padding: 20px;
 }
 
 .todo-header {
@@ -39,17 +42,47 @@
 
 .todo-stats {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   font-size: 0.9rem;
-  color: #666;
 }
 
 .todo-stats span {
-  padding: 4px 12px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 20px;
+  padding: 6px 12px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
+  font-weight: 500;
+  min-width: 80px;
+  justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 总计 badge - 使用更柔和的颜色 */
+.todo-stats span:nth-child(1) {
+  background: rgba(241, 248, 255, 0.5);
+  color: #6b7280;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* 已完成 badge */
+.todo-stats span:nth-child(2) {
+  background: rgba(240, 255, 244, 0.6);
+  color: #22863a;
+  border-color: rgba(190, 242, 203, 0.5);
+}
+
+/* 未完成 badge */
+.todo-stats span:nth-child(3) {
+  background: rgba(255, 245, 245, 0.6);
+  color: #d73a49;
+  border-color: rgba(255, 220, 224, 0.5);
+}
+
+/* 悬停效果也调整得更柔和 */
+.todo-stats span:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
 }
 
 .todo-list {
@@ -76,7 +109,7 @@
 }
 
 .todo-item {
-  background: white;
+  background: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
   padding: 14px 16px;
   margin-bottom: 12px;
@@ -84,7 +117,7 @@
   align-items: center;
   gap: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
   opacity: 1;
   transform: translateX(0);
   transition: transform 150ms ease-out, opacity 150ms ease-out;
@@ -100,7 +133,8 @@
 .todo-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.2);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .todo-item input[type="checkbox"] {
@@ -168,13 +202,13 @@
 }
 
 .todo-edit-btn:hover {
-  background-color: rgba(52, 152, 219, 0.1);
-  color: #3498db;
+  background: rgba(52, 152, 219, 0.15);
+  color: #2980b9;
 }
 
 .todo-delete-btn:hover {
-  background-color: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.15);
+  color: #c0392b;
 }
 
 .todo-input-container {
@@ -193,21 +227,24 @@
 .todo-input {
   flex: 1;
   padding: 12px 16px;
-  border: 2px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
+  border: 1px solid rgba(233, 236, 239, 0.8);
+  border-radius: 6px;
   font-size: 0.95rem;
-  transition: all 0.3s ease;
-  background: white;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.8);
+  color: #495057;
 }
 
 .todo-input:focus {
   outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.1);
+  border-color: rgba(233, 236, 239, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  background: white;
 }
 
 .todo-input::placeholder {
-  color: #95a5a6;
+  color: #adb5bd;
+  font-size: 0.9rem;
 }
 
 .todo-add-button {
@@ -268,6 +305,14 @@
 .todo-timestamp {
   font-size: 0.8rem;
   color: #95a5a6;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todo-timestamp svg {
+  stroke: currentColor;
+  opacity: 0.7;
 }
 
 .checkbox-wrapper {
@@ -348,11 +393,10 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 .action-btn {
   padding: 8px 12px;
   border: none;
-  background: rgba(0, 0, 0, 0.03);
-  color: #666;
+  background: none;
+  color: #95a5a6;
   cursor: pointer;
   border-radius: 6px;
-  font-size: 0.9rem;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -371,8 +415,70 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 }
 
 .action-btn.active {
-  background: rgba(76, 175, 80, 0.1);
-  color: #4CAF50;
+  background-color: #4a90e2;
+  color: white;
+}
+
+.action-btn.time-sort,
+.action-btn.name-sort {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(233, 236, 239, 0.8);
+  color: #495057;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 85px;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  letter-spacing: 0;
+}
+
+.action-btn.time-sort svg,
+.action-btn.name-sort svg {
+  stroke: currentColor;
+  transition: transform 0.2s ease;
+}
+
+.action-btn.time-sort:hover svg,
+.action-btn.name-sort:hover svg {
+  transform: scale(1.1);
+}
+
+.action-btn.time-sort,
+.action-btn.name-sort {
+  letter-spacing: -2px;
+}
+
+.action-btn.time-sort.active {
+  background: #e3f2fd;
+  border-color: #bbdefb;
+  color: #1976d2;
+}
+
+.action-btn.name-sort.active {
+  background: #f3e5f5;
+  border-color: #e1bee7;
+  color: #7b1fa2;
+}
+
+.action-btn.time-sort:hover:not(.active) {
+  background: #e3f2fd;
+  border-color: #bbdefb;
+  color: #1976d2;
+}
+
+.action-btn.name-sort:hover:not(.active) {
+  background: #f3e5f5;
+  border-color: #e1bee7;
+  color: #7b1fa2;
+}
+
+.action-btn:not(.active) {
+  opacity: 1;
+}
+
+.action-btn svg {
+  stroke: currentColor;
 }
 
 .action-btn.restore {
@@ -428,50 +534,128 @@ input[type="checkbox"]:checked + .custom-checkbox::after {
 }
 
 .clear-all-btn:hover {
-  background: rgba(231, 76, 60, 0.2);
-  transform: translateY(-1px);
+  background: rgba(231, 76, 60, 0.15);
+  color: #c0392b;
 }
 
-/* 输入区域样式 */
+/* 输入区域样式优化 */
 .input-section {
   display: flex;
   gap: 12px;
+  position: relative;
 }
 
-.todo-add-btn {
-  padding: 12px 24px;
-  background: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 500;
+/* 输入框样式优化 */
+.todo-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid rgba(233, 236, 239, 0.8);
+  border-radius: 6px;
   font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.8);
+  color: #495057;
+}
+
+.todo-input:focus {
+  outline: none;
+  border-color: rgba(233, 236, 239, 0.9);
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.todo-input::placeholder {
+  color: #adb5bd;
+  font-size: 0.9rem;
+}
+
+/* 添加按钮样式优化 */
+.todo-add-btn {
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #495057;
+  border: 1px solid rgba(233, 236, 239, 0.8);
+  border-radius: 6px;
+  font-weight: 500;
+  height: 42px;
+  width: 42px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.todo-add-btn:hover {
-  background: #45a049;
+.todo-add-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.todo-add-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.todo-add-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+/* 添加按钮涟漪效果 */
+.todo-add-btn::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, #dee2e6 10%, transparent 10.01%);
+  background-repeat: no-repeat;
+  background-position: 50%;
+  transform: scale(10, 10);
+  opacity: 0;
+  transition: transform .3s, opacity .5s;
+}
+
+.todo-add-btn:active::after {
+  transform: scale(0, 0);
+  opacity: .3;
+  transition: 0s;
+}
+
+/* 统一按钮悬浮效果 */
+.action-btn:hover:not(:disabled),
+.todo-action-btn:hover:not(:disabled),
+.clear-all-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #2c3e50;
 }
 
-.todo-action-btn:active {
-  transform: scale(0.95);
+/* 统一按钮点击效果 */
+.action-btn:active:not(:disabled),
+.todo-action-btn:active:not(:disabled),
+.clear-all-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
+/* 禁用状态优化 */
+.action-btn:disabled,
 .todo-action-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
+  background: #f8f9fa;
+  color: #adb5bd;
+  border-color: #e9ecef;
 }
 
-/* 禁用不必要的动画 */
-@media (prefers-reduced-motion: reduce) {
-  .todo-item {
-    transition: none;
-  }
+/* 排序按钮激活状态优化 */
+.action-btn.time-sort.active,
+.action-btn.name-sort.active {
+  font-weight: 500;
+  transform: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
