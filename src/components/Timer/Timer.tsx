@@ -1,19 +1,18 @@
-import React, { forwardRef } from 'react';
-import { useState, useEffect, useCallback, useRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useCallback, useRef, useImperativeHandle, forwardRef, type ReactElement } from 'react';
 import './Timer.css';
-import Countdown from '../Countdown/Countdown';
-
-type TimerMode = 'countdown' | 'stopwatch';
 
 export interface TimerRef {
   clearData: () => void;
 }
 
-const Timer = forwardRef<TimerRef>((_, ref) => {
+type TimerMode = 'countdown' | 'stopwatch';
+
+interface TimerProps {}
+
+const Timer = forwardRef<TimerRef, TimerProps>((_, ref): ReactElement => {
   const [mode, setMode] = useState<TimerMode>('countdown');
   const [time, setTime] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const timerRef = useRef<number>();
 
   useEffect(() => {
@@ -64,6 +63,9 @@ const Timer = forwardRef<TimerRef>((_, ref) => {
     if (!isRunning) {
       setTime(prev => {
         const newTime = prev + minutes * 60;
+        if (minutes < 0 && Math.abs(minutes * 60) > prev) {
+          return prev;
+        }
         return Math.max(0, newTime);
       });
     }
@@ -92,64 +94,110 @@ const Timer = forwardRef<TimerRef>((_, ref) => {
     clearData: clearTimerData
   }));
 
+  // 添加键盘事件处理函数
+  const handleKeyPress = useCallback((event: KeyboardEvent) => {
+    // 检查是否有输入框在焦点中
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement instanceof HTMLInputElement || 
+                          activeElement instanceof HTMLTextAreaElement;
+
+    // 如果输入框在焦点中，不处理键盘事件
+    if (isInputFocused) return;
+
+    switch (event.code) {
+      case 'Space':
+        event.preventDefault(); // 防止页面滚动
+        handleStartPause();
+        break;
+      case 'Delete':
+      case 'Backspace':
+        event.preventDefault();
+        handleReset();
+        break;
+    }
+  }, [handleStartPause, handleReset]);
+
+  // 添加键盘事件监听
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [handleKeyPress]);
+
   return (
-    <div className="timer-section">
-      <div className="timer-container">
-        <div className="mode-switch">
+    <div 
+      className="timer-container"
+      tabIndex={0} // 使div可以获得焦点
+    >
+      <div className="mode-switch">
+        <button 
+          className={`mode-btn ${mode === 'countdown' ? 'active' : ''}`}
+          onClick={toggleMode}
+          disabled={isRunning}
+        >
+          倒计时
+        </button>
+        <button 
+          className={`mode-btn ${mode === 'stopwatch' ? 'active' : ''}`}
+          onClick={toggleMode}
+          disabled={isRunning}
+        >
+          正计时
+        </button>
+      </div>
+
+      <div className="timer-display-section">
+        <div className="time-adjust left">
           <button 
-            className={`mode-btn ${mode === 'countdown' ? 'active' : ''}`}
-            onClick={toggleMode}
-            disabled={isRunning}
+            onClick={() => adjustTime(-5)} 
+            disabled={isRunning || time < 5 * 60}
           >
-            倒计时
+            -5:00
           </button>
           <button 
-            className={`mode-btn ${mode === 'stopwatch' ? 'active' : ''}`}
-            onClick={toggleMode}
-            disabled={isRunning}
+            onClick={() => adjustTime(-10)} 
+            disabled={isRunning || time < 10 * 60}
           >
-            正计时
+            -10:00
+          </button>
+          <button 
+            onClick={() => adjustTime(-30)} 
+            disabled={isRunning || time < 30 * 60}
+          >
+            -30:00
           </button>
         </div>
 
-        <div className="timer-display-section">
-          <div className="time-adjust left">
-            <button onClick={() => adjustTime(-5)} disabled={isRunning}>-5:00</button>
-            <button onClick={() => adjustTime(-10)} disabled={isRunning}>-10:00</button>
-            <button onClick={() => adjustTime(-30)} disabled={isRunning}>-30:00</button>
-          </div>
-
-          <div 
-            className={`timer-display ${isHovered ? 'hover' : ''}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            {formatTime(time)}
-          </div>
-
-          <div className="time-adjust right">
-            <button onClick={() => adjustTime(5)} disabled={isRunning}>+5:00</button>
-            <button onClick={() => adjustTime(10)} disabled={isRunning}>+10:00</button>
-            <button onClick={() => adjustTime(30)} disabled={isRunning}>+30:00</button>
-          </div>
+        <div 
+          className={`timer-display ${
+            isRunning ? 'running' : 'paused'
+          }`}
+        >
+          {formatTime(time)}
         </div>
 
-        <div className="main-controls">
-          <button 
-            className={`control-btn ${isRunning ? 'pause' : 'start'}`}
-            onClick={handleStartPause}
-          >
-            {isRunning ? 'PAUSE' : 'START'}
-          </button>
-          <button 
-            className="control-btn reset"
-            onClick={handleReset}
-          >
-            RESET
-          </button>
+        <div className="time-adjust right">
+          <button onClick={() => adjustTime(5)} disabled={isRunning}>+5:00</button>
+          <button onClick={() => adjustTime(10)} disabled={isRunning}>+10:00</button>
+          <button onClick={() => adjustTime(30)} disabled={isRunning}>+30:00</button>
         </div>
       </div>
-      <Countdown />
+
+      <div className="main-controls">
+        <button 
+          className={`control-btn ${isRunning ? 'pause' : 'start'}`}
+          onClick={handleStartPause}
+        >
+          {isRunning ? 'PAUSE' : 'START'}
+        </button>
+        <button 
+          className="control-btn reset"
+          onClick={handleReset}
+        >
+          RESET
+        </button>
+      </div>
     </div>
   );
 });

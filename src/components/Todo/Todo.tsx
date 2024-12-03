@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { pinyin } from 'pinyin-pro';
 import './Todo.css';
-import Modal from '../Modal/Modal';
 
 interface TodoItem {
   id: number;
@@ -9,11 +8,6 @@ interface TodoItem {
   completed: boolean;
   createdAt: number;
 }
-
-type TodoHistory = {
-  todos: TodoItem[];
-  timestamp: number;
-} | null;
 
 interface Particle {
   x: number;
@@ -50,32 +44,12 @@ interface TodoProps {
   onClearRequest: () => void;
 }
 
-interface TodoRef {
+export interface TodoRef {
   resetAllData: () => void;
 }
 
 // 添加排序类型
 type SortType = 'time' | 'time-reverse' | 'name' | 'name-reverse' | 'none';
-
-// 添加一个简单的获取拼音首字母的函数
-const getFirstLetter = (str: string): string => {
-  const pinyinMap: { [key: string]: string } = {
-    '阿': 'a', '把': 'b', '从': 'c', '的': 'd', '额': 'e',
-    '': 'f', '个': 'g', '好': 'h', '和': 'h', '几': 'j',
-    '看': 'k', '了': 'l', '吗': 'm', '你': 'n', '哦': 'o',
-    '批': 'p', '去': 'q', '人': 'r', '是': 's', '他': 't',
-    '我': 'w', '想': 'x', '要': 'y', '在': 'z'
-    // ... 可以根据需要添加更多映射
-  };
-
-  const firstChar = str.charAt(0);
-  // 如果是英文字母，直接返回
-  if (/[a-zA-Z]/.test(firstChar)) {
-    return firstChar.toLowerCase();
-  }
-  // 如果是中文，查找映射表
-  return pinyinMap[firstChar] || firstChar;
-};
 
 // 添加时间格式化函数
 const formatTimestamp = (timestamp: number): string => {
@@ -90,6 +64,17 @@ const formatTimestamp = (timestamp: number): string => {
   return `${year} 年 ${month} 月 ${day} 日 ${hours}:${minutes}:${seconds}`;
 };
 
+// 添加一个工具函数来确保列表唯一性
+const ensureUniqueTodos = (todos: TodoItem[]): TodoItem[] => {
+  const uniqueMap = new Map<number, TodoItem>();
+  todos.forEach(todo => uniqueMap.set(todo.id, todo));
+  return Array.from(uniqueMap.values());
+};
+
+// 添加常量配置
+const MAX_HISTORY_LENGTH = 100;  // 最大历史记录数量
+const MAX_TODOS_LENGTH = 100;    // 最大待办事项数量
+
 const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   const [todos, setTodos] = useState<TodoItem[]>(() => {
     const saved = localStorage.getItem('todos');
@@ -99,6 +84,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   });
   const [input, setInput] = useState('');
   const [deletedTodos, setDeletedTodos] = useState<TodoItem[]>([]);
+  
   const [deletedCompletedTodos, setDeletedCompletedTodos] = useState<TodoItem[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
@@ -109,7 +95,6 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   const [sortType, setSortType] = useState<SortType>('time-reverse');
   const [timeSort, setTimeSort] = useState<'asc' | 'desc'>('desc');
   const [nameSort, setNameSort] = useState<'asc' | 'desc'>('asc');
-  const [lastState, setLastState] = useState<TodoHistory>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // 保存到本地存储
@@ -129,29 +114,13 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
         return sortedTodos.sort((a, b) => {
           const pinyinA = pinyin(a.text, { toneType: 'none', type: 'array' });
           const pinyinB = pinyin(b.text, { toneType: 'none', type: 'array' });
-          
-          const minLength = Math.min(pinyinA.length, pinyinB.length);
-          for (let i = 0; i < minLength; i++) {
-            const compareResult = pinyinA[i].localeCompare(pinyinB[i]);
-            if (compareResult !== 0) {
-              return compareResult;
-            }
-          }
-          return pinyinA.length - pinyinB.length;
+          return pinyinA[0].localeCompare(pinyinB[0]);
         });
       case 'name-reverse':
         return sortedTodos.sort((a, b) => {
           const pinyinA = pinyin(a.text, { toneType: 'none', type: 'array' });
           const pinyinB = pinyin(b.text, { toneType: 'none', type: 'array' });
-          
-          const minLength = Math.min(pinyinA.length, pinyinB.length);
-          for (let i = 0; i < minLength; i++) {
-            const compareResult = pinyinB[i].localeCompare(pinyinA[i]);
-            if (compareResult !== 0) {
-              return compareResult;
-            }
-          }
-          return pinyinB.length - pinyinA.length;
+          return pinyinB[0].localeCompare(pinyinA[0]);
         });
       default:
         return sortedTodos;
@@ -160,10 +129,22 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
 
   // 修改 updateTodos 函数
   const updateTodos = useCallback((newTodos: TodoItem[], shouldResetStates = true) => {
-    setUndoStack(stack => [...stack, todos]);
-    setRedoStack([]);
+    // 检查待办事项数量
+    if (newTodos.length > MAX_TODOS_LENGTH) {
+      alert(`待办事项数量不能超过 ${MAX_TODOS_LENGTH} 条`);
+      return;
+    }
+
+    // 保存当前状态到撤销栈，并限制长度
+    setUndoStack(stack => {
+      const newStack = [...stack, todos];
+      return newStack.slice(-MAX_HISTORY_LENGTH);
+    });
     
-    const sortedTodos = sortTodos(newTodos, sortType);
+    setRedoStack([]); // 清空重做栈
+    
+    const uniqueTodos = ensureUniqueTodos(newTodos);
+    const sortedTodos = sortTodos(uniqueTodos, sortType);
     setTodos(sortedTodos);
 
     if (shouldResetStates) {
@@ -172,86 +153,84 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     }
   }, [todos, sortType, sortTodos]);
 
-  // 添加排序切换处理函数
-  const handleSortChange = (type: SortType) => {
-    setSortType(type);
-    updateTodos(todos, false);
-  };
-
   // 修改撤销功能
   const handleUndo = useCallback(() => {
     if (undoStack.length > 0) {
       const prevState = undoStack[undoStack.length - 1];
       const newUndoStack = undoStack.slice(0, -1);
       
-      setRedoStack(stack => [...stack, todos]);
-      setTodos(prevState);
+      // 保存当前状态到重做栈
+      setRedoStack(stack => {
+        const newStack = [...stack, todos];
+        return newStack.slice(-MAX_HISTORY_LENGTH);
+      });
+      
+      setTodos(ensureUniqueTodos(prevState));
       setUndoStack(newUndoStack);
 
-      // 重新计算删除状态
+      // 处理删除状态
       const currentCompleted = todos.filter(todo => todo.completed);
       const prevCompleted = prevState.filter(todo => todo.completed);
 
-      // 处理全部删除/还原的情况
       if (todos.length === 0 && prevState.length > 0) {
-        // 从空状态恢复到有内容，清除删除状态
         setDeletedTodos([]);
       } else if (todos.length > 0 && prevState.length === 0) {
-        // 从有内容变成空，设置删除状态
-        setDeletedTodos(todos);
+        setDeletedTodos(ensureUniqueTodos(todos));
       }
 
-      // 处理已完成项的删除/还原
       if (currentCompleted.length === 0 && prevCompleted.length > 0) {
-        // 从无已完成恢复到有已完成，清除已完成删除状态
         setDeletedCompletedTodos([]);
       } else if (currentCompleted.length > 0 && prevCompleted.length === 0) {
-        // 从有已完成变成无已完成，设置已完成删除状态
-        setDeletedCompletedTodos(currentCompleted);
+        setDeletedCompletedTodos(ensureUniqueTodos(currentCompleted));
       }
     }
   }, [todos, undoStack]);
 
-  // 修改重做功能，使用相同的逻辑
+  // 修改重做功能
   const handleRedo = useCallback(() => {
     if (redoStack.length > 0) {
       const nextState = redoStack[redoStack.length - 1];
       const newRedoStack = redoStack.slice(0, -1);
       
-      setUndoStack(stack => [...stack, todos]);
-      setTodos(nextState);
+      // 保存当前状态到撤销栈
+      setUndoStack(stack => {
+        const newStack = [...stack, todos];
+        return newStack.slice(-MAX_HISTORY_LENGTH);
+      });
+      
+      setTodos(ensureUniqueTodos(nextState));
       setRedoStack(newRedoStack);
 
-      // 重新算删除状态
+      // 处理删除状态
       const currentCompleted = todos.filter(todo => todo.completed);
       const nextCompleted = nextState.filter(todo => todo.completed);
 
-      // 处理全部删除/还原的情况
       if (todos.length === 0 && nextState.length > 0) {
-        // 从空状态恢复到有内容，清除删除状态
         setDeletedTodos([]);
       } else if (todos.length > 0 && nextState.length === 0) {
-        // 从有内容变成空，设置删除状态
         setDeletedTodos(todos);
       }
 
-      // 处理已完成项的删除/还原
       if (currentCompleted.length === 0 && nextCompleted.length > 0) {
-        // 从无已完成恢复到有已完成，清除已完成删除状态
         setDeletedCompletedTodos([]);
       } else if (currentCompleted.length > 0 && nextCompleted.length === 0) {
-        // 从有已完成变成无已完成，设置已完成删除状态
         setDeletedCompletedTodos(currentCompleted);
       }
     }
   }, [todos, redoStack]);
 
-  const addTodo = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (input.trim()) {
+  // 修改创建新待办事项的函数
+  const createNewTodo = useCallback((text: string) => {
+    if (text.trim()) {
+      // 检查是否达到待办事项数量上限
+      if (todos.length >= MAX_TODOS_LENGTH) {
+        alert(`待办事项数量已达到上限 ${MAX_TODOS_LENGTH} 条`);
+        return;
+      }
+
       const newTodo = {
         id: Date.now(),
-        text: input.trim(),
+        text: text.trim(),
         completed: false,
         createdAt: Date.now()
       };
@@ -261,7 +240,14 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
       setInput('');
       inputRef.current?.focus();
     }
-  }, [input, todos, updateTodos]);
+  }, [todos, updateTodos]);
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      createNewTodo(input);
+    }
+  };
 
   const startEditing = (todo: TodoItem) => {
     setEditingId(todo.id);
@@ -296,7 +282,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     }
   };
 
-  // 完成所有/取消完成所有
+  // 完成所有/取完成所有
   const toggleAllComplete = () => {
     const allCompleted = todos.every(todo => todo.completed);
     updateTodos(todos.map(todo => ({
@@ -309,11 +295,12 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   const toggleDeleteAll = () => {
     if (todos.length === 0 && deletedTodos.length > 0) {
       // 还原所有
-      updateTodos(deletedTodos, false);
+      const uniqueTodos = ensureUniqueTodos(deletedTodos);
+      updateTodos(uniqueTodos, false);
       setDeletedTodos([]);
     } else {
       // 删除所有
-      setDeletedTodos(todos);
+      setDeletedTodos(ensureUniqueTodos([...deletedTodos, ...todos]));
       updateTodos([], false);
     }
   };
@@ -321,13 +308,17 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
   // 删除已完成/还原已完成
   const toggleDeleteCompleted = () => {
     const completedTodos = todos.filter(todo => todo.completed);
+    
     if (completedTodos.length === 0 && deletedCompletedTodos.length > 0) {
-      // 还原已完成
-      updateTodos([...todos, ...deletedCompletedTodos], false);
+      // 还原已完成项目
+      const uniqueTodos = ensureUniqueTodos([...todos, ...deletedCompletedTodos]);
+      updateTodos(uniqueTodos, false);
       setDeletedCompletedTodos([]);
-    } else {
-      // 删除已完成
-      setDeletedCompletedTodos(completedTodos);
+    } else if (completedTodos.length > 0) {
+      // 删除已完成项目
+      setDeletedCompletedTodos(prevDeleted => {
+        return ensureUniqueTodos([...prevDeleted, ...completedTodos]);
+      });
       updateTodos(todos.filter(todo => !todo.completed), false);
     }
   };
@@ -405,26 +396,6 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     }
   }));
 
-  // 添加处理回车键的函数
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (input.trim()) {
-        const newTodo = {
-          id: Date.now(),
-          text: input.trim(),
-          completed: false,
-          createdAt: Date.now()
-        };
-        
-        const newTodos = [...todos, newTodo];
-        updateTodos(newTodos);
-        setInput('');
-        inputRef.current?.focus();
-      }
-    }
-  };
-
   // 修改时间排序处理函数
   const handleTimeSort = () => {
     const newSort = timeSort === 'asc' ? 'desc' : 'asc';
@@ -443,15 +414,6 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     setTodos(sortedTodos);
   };
 
-  useEffect(() => {
-    if (todos.length > 0) {
-      setLastState({
-        todos: [...todos],
-        timestamp: Date.now()
-      });
-    }
-  }, [todos]);
-
   // 在 Todo 组件内添加 SVG 图标组件
   const EditIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -464,16 +426,6 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 6h18" />
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    </svg>
-  );
-
-  const ClearIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18" />
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-      <line x1="10" y1="11" x2="10" y2="17" />
-      <line x1="14" y1="11" x2="14" y2="17" />
     </svg>
   );
 
@@ -565,7 +517,22 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
             onClick={onClearRequest}
             title="清除所有数据"
           >
-            <ClearIcon />
+            <svg 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              <line x1="10" y1="11" x2="10" y2="17" />
+              <line x1="14" y1="11" x2="14" y2="17" />
+            </svg>
           </button>
           <div className="todo-stats">
             <span>总计: {stats.total}</span>
@@ -586,14 +553,14 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
           <button 
             type="button" 
             className="todo-add-btn" 
-            onClick={() => handleKeyPress({ key: 'Enter', shiftKey: false } as React.KeyboardEvent<HTMLInputElement>)}
+            onClick={() => createNewTodo(input)}
           >
             添加
           </button>
         </div>
       </div>
 
-      <div className="todo-actions">
+      <div className="todo-header-actions">
         <button
           type="button"
           className={`action-btn ${allCompleted ? 'active' : ''}`}
@@ -649,7 +616,7 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
           className="action-btn redo-btn"
           onClick={handleRedo}
           disabled={redoStack.length === 0}
-          title="恢复"
+          title="重做"
         >
           <RedoIcon />
         </button>
@@ -724,7 +691,11 @@ const Todo = forwardRef<TodoRef, TodoProps>(({ onClearRequest }, ref) => {
         ref={canvasRef}
         className="particles-canvas"
         width={window.innerWidth}
-        height={window.innerHeight}
+        height={300}
+        style={{
+          width: '100%',
+          height: '100%'
+        }}
       />
     </div>
   );

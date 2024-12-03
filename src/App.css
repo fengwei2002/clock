@@ -1,33 +1,169 @@
-.app-container {
-  display: flex;
-  min-height: 100vh;
-  padding: 20px;
-  gap: 20px;
-  background-color: #f0f2f5;
+:root {
+  /* 主色调 - 奶黄护眼色系 */
+  --bg-primary: #FFF9E6;     /* 最浅 - 主背景 */
+  --bg-secondary: #FFF5D6;   /* 次浅 - 组件背景 */
+  --bg-hover: #FFF0C6;       /* 悬浮背景色 */
+  
+  /* 文字颜色 */
+  --text-primary: #5C4B37;   /* 主要文字 */
+  --text-secondary: #8B7355; /* 次要文字 */
+  --text-light: #A69677;     /* 最浅文字 */
+  
+  /* 边框和分割线 */
+  --border-color: rgba(150, 140, 100, 0.15);
+  
+  /* 功能色 */
+  --success: #7FA772;        /* 成功/开始 - 柔和绿 */
+  --warning: #D4A373;        /* 警告/暂停 - 柔和橙 */
+  --error: #C17C74;          /* 错误/删除 - 柔和红 */
+  
+  /* 交互状态 */
+  --hover-opacity: 0.85;
+  --disabled-opacity: 0.5;
 }
 
-.todo-section {
-  flex: 1;
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
+.app-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  max-width: 1800px;
   margin: 0 auto;
+  width: 95%;
+  background-color: var(--bg-primary);
+}
+
+.main-section {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(10px);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  min-height: 0;
+  border: 1px solid var(--border-color);
+}
+
+.right-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-height: calc(100vh - 48px);
+  overflow: auto;
 }
 
 .timer-section {
   flex: 1;
-  background-color: white;
-  border-radius: 8px;
+  min-height: 320px;
+}
+
+.bottom-widgets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  min-height: 280px;
+}
+
+.timer-section,
+.countdown-section,
+.calendar-section {
+  background: var(--bg-secondary);
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  margin: 0 auto;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+}
+
+.countdown-section,
+.calendar-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 响应式布局 */
+@media (max-width: 1280px) {
+  .app-container {
+    grid-template-columns: 50% 50%;
+    gap: 20px;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .app-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .right-section {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
   .app-container {
-    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
   }
-} 
+}
+
+/* 滚动条统一样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-hover);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-light);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 统一文字选择样式 */
+::selection {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* Todo 组件样式调整 */
+.main-section > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+  position: relative;
+}
+
+/* 按钮基础样式 */
+button {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+}
+
+button:hover:not(:disabled) {
+  opacity: var(--hover-opacity);
+}
+
+button:disabled {
+  opacity: var(--disabled-opacity);
+}
+
+/* 文字颜色统一 */
+body {
+  color: var(--text-primary);
+}

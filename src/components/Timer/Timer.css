@@ -1,140 +1,342 @@
 .timer-container {
+  background: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 20px;
+  gap: 16px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  outline: none;
+  position: relative;
 }
 
-/* 模式切换按钮样式 */
+/* 添加焦点指示器 */
+.timer-container:focus::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 16px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* 可以添加一个提示文本 */
+.timer-container[tabindex="0"]::before {
+  content: '空格键: 开始/暂停  删除键: 重置';
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.timer-container:focus::before {
+  opacity: 0.7;
+}
+
+/* 头部样式 */
+.timer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.timer-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 时间显示 */
+.timer-display {
+  flex: 1;
+  min-width: 240px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 3.5rem;
+  font-weight: 300;
+  color: var(--text-primary);
+  font-family: 'SF Mono', monospace;
+  background: var(--bg-hover);
+  border-radius: 12px;
+  text-shadow: none;
+  letter-spacing: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+  border: 1px solid var(--border-color);
+}
+
+.timer-display:hover {
+  background: rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+/* 运行状态样式 */
+.timer-display.running {
+  color: var(--success);
+  background: var(--bg-primary);
+  border-color: var(--success);
+  animation: timerPulse 2s infinite;
+}
+
+/* 暂停状态样式 */
+.timer-display.paused {
+  color: var(--warning);
+  border-color: var(--warning);
+}
+
+/* 运行状态的动画 */
+@keyframes timerPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(127, 167, 114, 0.1);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(127, 167, 114, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(127, 167, 114, 0);
+  }
+}
+
+/* 添加状态指示器 */
+.timer-display::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+.timer-display.running::before {
+  background: var(--success);
+  animation: blink 1s infinite;
+}
+
+.timer-display.paused::before {
+  background: var(--warning);
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* 模式切换按钮 */
 .mode-switch {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 16px;
+  padding: 1px;
+  background: var(--bg-hover);
+  border-radius: 10px;
 }
 
 .mode-btn {
+  flex: 1;
   padding: 8px 16px;
-  border: 1px solid #d9d9d9;
-  background: white;
-  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 8px;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
+  height: 32px;
+}
+
+.mode-btn:hover:not(:disabled) {
+  background: var(--bg-primary);
 }
 
 .mode-btn.active {
-  background-color: #1890ff;
-  color: white;
-  border-color: #1890ff;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
-/* 时间显示区域样式 */
+.mode-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 时间调整区域 */
 .timer-display-section {
   display: flex;
   align-items: center;
-  gap: 24px;
-  margin: 20px 0;
+  gap: 12px;
+  margin: 12px 0;
 }
 
-.timer-display {
-  font-size: 64px;
-  font-weight: bold;
-  font-family: monospace;
-  color: #333;
-  padding: 20px 40px;
-  border-radius: 8px;
-  background: #f8f9fa;
-  min-width: 240px;
-  text-align: center;
-  transition: transform 0.3s ease;
-}
-
-.timer-display.hover {
-  transform: scale(1.05);
-}
-
-/* 时间调整按钮样式 */
 .time-adjust {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 80px;
 }
 
 .time-adjust button {
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  background: white;
-  border-radius: 4px;
+  padding: 6px 10px;
+  border: none;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   white-space: nowrap;
-  width: 100%;
 }
 
 .time-adjust button:hover:not(:disabled) {
-  border-color: #1890ff;
-  color: #1890ff;
+  background: rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
 .time-adjust button:disabled {
-  cursor: not-allowed;
   opacity: 0.5;
+  cursor: not-allowed;
 }
 
-/* 主控制按钮样式 */
+/* 主控制按钮 */
 .main-controls {
   display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .control-btn {
-  padding: 12px 32px;
   border: none;
-  border-radius: 4px;
-  font-weight: bold;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  font-size: 16px;
+  transition: all 0.3s ease;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
 }
 
-.start {
-  background-color: #52c41a;
-  color: white;
+.control-btn.start {
+  flex: 2;
+  background: var(--success);
+  color: var(--bg-primary);
 }
 
-.pause {
-  background-color: #faad14;
-  color: white;
+.control-btn.pause {
+  flex: 2;
+  background: var(--warning);
+  color: var(--bg-primary);
 }
 
-.reset {
-  background-color: #ff4d4f;
-  color: white;
+.control-btn.reset {
+  flex: 1;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  min-width: 80px;
 }
 
-.control-btn:hover {
+/* 悬浮效果 */
+.control-btn.start:hover,
+.control-btn.pause:hover {
   transform: translateY(-1px);
-  filter: brightness(1.1);
+  box-shadow: none;
 }
 
-/* 响应式布局 */
-@media (max-width: 768px) {
-  .timer-display-section {
-    flex-direction: column;
-    gap: 16px;
-  }
+.control-btn.start:hover {
+  background: #45a049;
+}
 
-  .time-adjust {
-    flex-direction: row;
-    width: 100%;
-    justify-content: center;
-    min-width: unset;
-  }
+.control-btn.pause:hover {
+  background: #e67e22;
+}
 
-  .time-adjust button {
-    width: auto;
-  }
-} 
+.control-btn.reset:hover {
+  background: rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+/* 快捷时间按钮 */
+.timer-shortcuts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.shortcut-btn {
+  padding: 6px 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.03);
+  color: #666;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shortcut-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.shortcut-btn.active {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+}
+
+/* 进度条样式 */
+.timer-progress {
+  height: 4px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.timer-progress-bar {
+  height: 100%;
+  background: #4CAF50;
+  border-radius: 2px;
+  transition: width 0.3s linear;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.timer-active .timer-display {
+  animation: pulse 2s infinite;
+  color: #4CAF50;
+}
+
+/* 调整标题文字 */
+.timer-title {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.85;
+}

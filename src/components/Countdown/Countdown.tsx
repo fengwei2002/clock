@@ -1,99 +1,147 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import './Countdown.css';
 
-interface CountdownProps {
-  onComplete?: () => void;
+interface CountdownData {
+  targetDate: string;
+  timeLeft: {
+    days: number;
+    total: number;
+  } | null;
 }
 
-const Countdown: React.FC<CountdownProps> = ({ onComplete }) => {
+export interface CountdownRef {
+  clearData: () => void;
+}
+
+const Countdown = forwardRef<CountdownRef>((_, ref) => {
   const [targetDate, setTargetDate] = useState<Date | null>(null);
-  const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [timeLeft, setTimeLeft] = useState<{ days: number; total: number } | null>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
-  const calculateDaysLeft = useCallback((target: Date) => {
+  // 暴露清除方法给父组件
+  useImperativeHandle(ref, () => ({
+    clearData: handleClear
+  }));
+
+  // 从本地存储加载数据
+  useEffect(() => {
+    const savedData = localStorage.getItem('countdownData');
+    if (savedData) {
+      const data: CountdownData = JSON.parse(savedData);
+      if (data.targetDate) {
+        setSelectedDate(data.targetDate);
+        const newTargetDate = new Date(data.targetDate);
+        newTargetDate.setHours(23, 59, 59, 999);
+        setTargetDate(newTargetDate);
+        if (data.timeLeft) {
+          setTimeLeft(data.timeLeft);
+        }
+      }
+    }
+  }, []);
+
+  // 保存数据到本地存储
+  const saveToLocalStorage = (date: string, timeLeftData: { days: number; total: number } | null) => {
+    const data: CountdownData = {
+      targetDate: date,
+      timeLeft: timeLeftData
+    };
+    localStorage.setItem('countdownData', JSON.stringify(data));
+  };
+
+  const calculateTimeLeft = (target: Date) => {
     const now = new Date();
-    // 设置时间为当天的开始（00:00:00）
-    now.setHours(0, 0, 0, 0);
-    const targetDay = new Date(target);
-    targetDay.setHours(0, 0, 0, 0);
-    
-    const difference = targetDay.getTime() - now.getTime();
-    const days = Math.ceil(difference / (1000 * 60 * 60 * 24));
+    const difference = target.getTime() - now.getTime();
+    return {
+      days: Math.ceil(difference / (1000 * 60 * 60 * 24)),
+      total: difference
+    };
+  };
 
-    if (days <= 0) {
-      onComplete?.();
-      setTargetDate(null);
-      setDaysLeft(null);
+  useEffect(() => {
+    if (targetDate) {
+      const timer = setInterval(() => {
+        const newTimeLeft = calculateTimeLeft(targetDate);
+        if (newTimeLeft.total <= 0) {
+          handleClear();
+        } else {
+          setTimeLeft(newTimeLeft);
+          // 保存更新后的时间
+          saveToLocalStorage(selectedDate, newTimeLeft);
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [targetDate, selectedDate]);
+
+  const handleClear = () => {
+    setTimeLeft(null);
+    setTargetDate(null);
+    setSelectedDate('');
+    // 清除本地存储
+    localStorage.removeItem('countdownData');
+  };
+
+  const handleStartCountdown = () => {
+    if (timeLeft) {
+      handleClear();
       return;
     }
 
-    setDaysLeft(days);
-  }, [onComplete]);
-
-  useEffect(() => {
-    if (!targetDate) return;
-
-    calculateDaysLeft(targetDate);
-    // 每天凌晨更新一次
-    const timer = setInterval(() => {
-      calculateDaysLeft(targetDate);
-    }, 1000 * 60 * 60); // 每小时检查一次
-
-    return () => clearInterval(timer);
-  }, [targetDate, calculateDaysLeft]);
-
-  const handleDateSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const dateStr = formData.get('date') as string;
-
-    if (dateStr) {
-      const target = new Date(dateStr);
-      setTargetDate(target);
-      calculateDaysLeft(target);
+    if (!selectedDate) {
+      dateInputRef.current?.showPicker();
+      return;
     }
+    const newTargetDate = new Date(selectedDate);
+    newTargetDate.setHours(23, 59, 59, 999);
+    setTargetDate(newTargetDate);
+    const newTimeLeft = calculateTimeLeft(newTargetDate);
+    setTimeLeft(newTimeLeft);
+    // 保存新的倒计时数据
+    saveToLocalStorage(selectedDate, newTimeLeft);
   };
 
   return (
     <div className="countdown-container">
-      <h3 className="countdown-title">倒数日</h3>
-      
-      <form onSubmit={handleDateSubmit} className="countdown-form">
-        <div className="input-group">
-          <input
-            type="date"
-            name="date"
-            required
+      <div className="countdown-header">
+        <h3>倒数日</h3>
+        <div className="countdown-input-group">
+          <input 
+            ref={dateInputRef}
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
             min={new Date().toISOString().split('T')[0]}
-            className="countdown-input"
+            placeholder="选择日期"
+            disabled={timeLeft !== null}
           />
-          <button type="submit" className="countdown-button">
-            开始倒数
+          <button 
+            className={`countdown-btn ${timeLeft ? 'clear' : ''}`}
+            onClick={handleStartCountdown}
+          >
+            {timeLeft ? '清除' : '开始倒数'}
           </button>
         </div>
-      </form>
-
-      {daysLeft !== null && (
+      </div>
+      
+      {timeLeft && (
         <div className="countdown-display">
-          <div className="countdown-item">
-            <span className="countdown-value">{daysLeft}</span>
-            <span className="countdown-label">天</span>
+          <div className="countdown-circle">
+            <div className="countdown-number">
+              {timeLeft.days}
+            </div>
+          </div>
+          <div className="countdown-label">
+            {timeLeft.days > 0 ? '天后' : '今天'}
           </div>
         </div>
       )}
-
-      {targetDate && (
-        <button 
-          className="countdown-reset" 
-          onClick={() => {
-            setTargetDate(null);
-            setDaysLeft(null);
-          }}
-        >
-          重置
-        </button>
-      )}
     </div>
   );
-};
+});
+
+Countdown.displayName = 'Countdown';
 
 export default Countdown; 

@@ -1,18 +1,71 @@
-.clear-button {
-  background-color: #ff4d4d;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+.clear-content {
+  padding: 1.2rem;
+  text-align: center;
+  animation: fadeIn 0.3s ease-out;
+  color: var(--text-primary);
 }
 
-.clear-button:hover {
-  background-color: #ff3333;
+.clear-icon {
+  margin: 0.5rem auto;
+  width: 56px;
+  height: 56px;
+  background: rgba(193, 124, 116, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
 }
 
-.clear-button:active {
-  background-color: #e60000;
-} 
+.clear-icon:hover {
+  transform: scale(1.05);
+}
+
+.clear-icon svg {
+  stroke: var(--error);
+}
+
+.clear-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  margin: 1rem 0;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.clear-details {
+  list-style: none;
+  padding: 0.8rem 1.2rem;
+  margin: 0.8rem 0;
+  background: var(--bg-hover);
+  border-radius: 8px;
+  text-align: left;
+  color: var(--text-secondary);
+}
+
+.clear-details li {
+  color: #5c6b7a;
+  padding: 0.3rem 0;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clear-details li::before {
+  content: "✓";
+  color: var(--success);
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
